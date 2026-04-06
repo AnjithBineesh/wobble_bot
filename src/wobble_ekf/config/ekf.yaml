@@ -1,0 +1,20 @@
+ekf_filter_node:
+  ros__parameters:
+
+    frequency: 50.0
+
+    # process noise (robot motion uncertainty)
+    process_noise: 0.001
+
+    # encoder reliability
+    odom_noise: 0.05
+
+    # imu reliability
+    imu_noise: 0.02
+
+    # frames
+    base_frame: base_link
+    odom_frame: odom
+
+    # output topic
+    output_topic: /odom_filtered
