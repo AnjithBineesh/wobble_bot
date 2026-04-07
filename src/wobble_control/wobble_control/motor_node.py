@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-import rclpy
-from rclpy.node import Node
 from geometry_msgs.msg import Twist
 import lgpio
+import rclpy
+from rclpy.node import Node
 
 # Motor pins
 IN1 = 17
@@ -25,10 +25,8 @@ MAX_PWM = 100
 class MotorNode(Node):
 
     def __init__(self):
-
         super().__init__('motor_node')
-
-        self.get_logger().info("Motor node started")
+        self.get_logger().info('Motor node started')
 
         self.h = lgpio.gpiochip_open(CHIP)
 
@@ -50,7 +48,6 @@ class MotorNode(Node):
         )
 
     def stop_motors(self):
-
         lgpio.gpio_write(self.h, IN1, 0)
         lgpio.gpio_write(self.h, IN2, 0)
         lgpio.gpio_write(self.h, IN3, 0)
@@ -60,7 +57,6 @@ class MotorNode(Node):
         lgpio.tx_pwm(self.h, ENB, 1000, 0)
 
     def cmd_callback(self, msg):
-
         linear = msg.linear.x
         angular = msg.angular.z * TURN_GAIN
 
@@ -100,28 +96,22 @@ class MotorNode(Node):
         lgpio.tx_pwm(self.h, ENB, 1000, pwm_right)
 
         self.get_logger().info(
-            f"PWM Left:{pwm_left}  PWM Right:{pwm_right}"
+            f'PWM Left:{pwm_left}  PWM Right:{pwm_right}'
         )
 
 
 def main(args=None):
-
     rclpy.init(args=args)
-
     node = MotorNode()
 
     try:
         rclpy.spin(node)
-
     except KeyboardInterrupt:
         pass
 
     node.stop_motors()
-
     lgpio.gpiochip_close(node.h)
-
     node.destroy_node()
-
     rclpy.shutdown()
 
 

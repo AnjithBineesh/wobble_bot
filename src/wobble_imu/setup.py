@@ -1,3 +1,6 @@
+from glob import glob
+import os
+
 from setuptools import find_packages, setup
 
 package_name = 'wobble_imu'
@@ -10,6 +13,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (os.path.join('share', package_name, 'config'),
+            glob('config/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -24,7 +29,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-	 'imu_node = wobble_imu.imu_node:main',
+            'imu_node = wobble_imu.imu_node:main',
+            'calibrate_imu = wobble_imu.calibrate_imu:main',
         ],
     },
 )

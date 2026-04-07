@@ -1,0 +1,14 @@
+imu_node:
+  ros__parameters:
+    publish_rate_hz: 100.0
+    log_rate_hz: 0.5
+    frame_id: imu_link
+    calibration_file: ~/.ros2/imu_calibration.json
+    zero_reference_on_startup: true
+    accel_alpha: 0.2
+    gyro_alpha: 0.35
+    complementary_gain: 0.02
+    # Set these after checking the IMU board orientation on the robot.
+    mount_roll_deg: 0.0
+    mount_pitch_deg: 0.0
+    mount_yaw_deg: 0.0

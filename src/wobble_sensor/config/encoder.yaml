@@ -1,0 +1,26 @@
+encoder_node:
+  ros__parameters:
+    gpio_chip: 4
+    left_a_pin: 20
+    left_b_pin: 21
+    right_a_pin: 26
+    right_b_pin: 19
+
+    # Set to -1 if a wheel counts downward when rotated forward.
+    left_direction: 1
+    right_direction: 1
+
+    # Use poll as the safe default on hardware until edge callbacks are
+    # confirmed working on this board. Valid values: poll, edge.
+    decode_mode: poll
+
+    # Edge-driven decoding no longer uses timer polling. Keep this only for
+    # backward-compatible configs; the live tuning knobs are publish_rate_hz
+    # and min_transition_interval_sec.
+    poll_rate_hz: 2000.0
+    publish_rate_hz: 50.0
+    diagnostics_rate_hz: 1.0
+    # Retained for backward compatibility; edge-driven decoding ignores this.
+    stable_samples_required: 1
+    # Warn if the encoder count changes faster than this while the robot is idle.
+    max_still_ticks_per_sec: 2

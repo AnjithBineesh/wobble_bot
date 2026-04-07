@@ -1,20 +1,18 @@
 ekf_filter_node:
   ros__parameters:
-
-    frequency: 50.0
-
-    # process noise (robot motion uncertainty)
-    process_noise: 0.001
-
-    # encoder reliability
-    odom_noise: 0.05
-
-    # imu reliability
-    imu_noise: 0.02
-
-    # frames
+    publish_rate_hz: 50.0
+    wheel_odom_topic: /wheel/odom
+    imu_topic: /imu/data
+    output_topic: /odom
     base_frame: base_link
     odom_frame: odom
-
-    # output topic
-    output_topic: /odom_filtered
+    publish_tf: true
+    process_noise_xy: 0.002
+    process_noise_yaw: 0.01
+    process_noise_velocity: 0.05
+    process_noise_yaw_rate: 0.08
+    wheel_position_noise: 0.02
+    wheel_yaw_noise: 0.20
+    wheel_linear_velocity_noise: 0.08
+    wheel_yaw_rate_noise: 0.15
+    imu_yaw_rate_noise: 0.02

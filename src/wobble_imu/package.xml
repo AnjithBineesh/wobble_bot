@@ -9,6 +9,9 @@
 
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
+  <depend>mpu6050</depend>
+  <depend>ahrs</depend>
+  <depend>numpy</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

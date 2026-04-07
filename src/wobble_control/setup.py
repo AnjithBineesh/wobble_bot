@@ -24,7 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-	'motor_node = wobble_control.motor_node:main',
+            'motor_node = wobble_control.motor_node:main',
         ],
     },
 )

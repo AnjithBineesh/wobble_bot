@@ -9,6 +9,20 @@
 
   <depend>launch</depend>
   <depend>launch_ros</depend>
+  <depend>xacro</depend>
+  <depend>robot_state_publisher</depend>
+  <depend>joint_state_publisher</depend>
+  <depend>joint_state_publisher_gui</depend>
+  <depend>slam_toolbox</depend>
+  <depend>rplidar_ros</depend>
+  <depend>wobble_control</depend>
+  <depend>wobble_sensor</depend>
+  <depend>wobble_odometry</depend>
+  <depend>wobble_imu</depend>
+  <depend>wobble_ekf</depend>
+  <depend>tf2_ros</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
