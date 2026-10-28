@@ -24,6 +24,9 @@ setup(
         # SLAM config
         (os.path.join('share', package_name, 'config'),
          glob('config/*')),
+        # worlds
+        (os.path.join('share', package_name, 'worlds'),
+         glob('worlds/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

@@ -1,408 +1,862 @@
 <?xml version="1.0"?>
 <robot name="wobble" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-<!-- PARAMETERS -->
+  <!-- ================================================================ -->
+  <!-- PARAMETERS                                                        -->
+  <!-- ================================================================ -->
 
-<xacro:property name="plate_length" value="0.32"/>
-<xacro:property name="plate_width"  value="0.26"/>
-<xacro:property name="plate_thickness" value="0.015"/>
+  <!-- Base layer dimensions (bottom plate) -->
+  <xacro:property name="base_plate_length"    value="0.32"/>
+  <xacro:property name="base_plate_width"     value="0.26"/>
+
+  <!-- Second layer dimensions (middle plate - stepped between base and top) -->
+  <xacro:property name="second_plate_length"  value="0.26"/>
+  <xacro:property name="second_plate_width"   value="0.20"/>
 
-<xacro:property name="layer_gap" value="0.12"/>
+  <!-- Top layer dimensions (third plate) -->
+  <xacro:property name="top_plate_length"     value="0.22"/>
+  <xacro:property name="top_plate_width"      value="0.18"/>
 
-<xacro:property name="rod_radius" value="0.005"/>
+  <xacro:property name="plate_length"         value="${base_plate_length}"/>
+  <xacro:property name="plate_width"          value="${base_plate_width}"/>
+  <xacro:property name="plate_thickness"      value="0.015"/>
 
-<xacro:property name="wheel_radius" value="0.0335"/>
-<xacro:property name="wheel_width" value="0.03"/>
-
-<xacro:property name="wheel_x" value="-0.07"/>
-<xacro:property name="wheel_y" value="0.155"/>
-
-<xacro:property name="laser_x" value="0.0"/>
-<xacro:property name="laser_y" value="0.0"/>
-<xacro:property name="laser_z" value="${wheel_radius + 2*layer_gap + 0.015}"/>
-<xacro:property name="laser_roll" value="0.0"/>
-<xacro:property name="laser_pitch" value="0.0"/>
-<xacro:property name="laser_yaw" value="0.0"/>
-
-
-<!-- MATERIALS -->
-
-<material name="wood">
-<color rgba="0.65 0.32 0.12 1"/>
-</material>
-
-<material name="metal">
-<color rgba="0.75 0.75 0.75 1"/>
-</material>
-
-<material name="blue">
-<color rgba="0.05 0.05 0.8 1"/>
-</material>
-
-<material name="black">
-<color rgba="0.1 0.1 0.1 1"/>
-</material>
-
-
-<!-- BASE LAYER -->
-
-<link name="base_link">
-
-<inertial>
-<mass value="2.0"/>
-<origin xyz="0 0 ${wheel_radius}"/>
-<inertia ixx="0.0416" ixy="0.0" ixz="0.0" iyy="0.0505" iyz="0.0" izz="0.0814"/>
-</inertial>
-
-<visual>
-<origin xyz="0 0 ${wheel_radius}"/>
-<geometry>
-<box size="${plate_length} ${plate_width} ${plate_thickness}"/>
-</geometry>
-<material name="wood"/>
-</visual>
-
-<collision>
-<origin xyz="0 0 ${wheel_radius}"/>
-<geometry>
-<box size="${plate_length} ${plate_width} ${plate_thickness}"/>
-</geometry>
-</collision>
-
-</link>
-
-
-
-<!-- SECOND LAYER -->
-
-<link name="second_layer">
-
-<inertial>
-<mass value="1.0"/>
-<origin xyz="0 0 ${wheel_radius + layer_gap}"/>
-<inertia ixx="0.0208" ixy="0.0" ixz="0.0" iyy="0.0253" iyz="0.0" izz="0.0407"/>
-</inertial>
-
-<visual>
-<origin xyz="0 0 ${wheel_radius + layer_gap}"/>
-<geometry>
-<box size="${plate_length} ${plate_width} ${plate_thickness}"/>
-</geometry>
-<material name="wood"/>
-</visual>
-
-<collision>
-<origin xyz="0 0 ${wheel_radius + layer_gap}"/>
-<geometry>
-<box size="${plate_length} ${plate_width} ${plate_thickness}"/>
-</geometry>
-</collision>
-
-</link>
-
-<joint name="joint_second_layer" type="fixed">
-<parent link="base_link"/>
-<child link="second_layer"/>
-</joint>
-
-
-
-<!-- THIRD LAYER -->
-
-<link name="top_layer">
-
-<inertial>
-<mass value="0.8"/>
-<origin xyz="0 0 ${wheel_radius + 2*layer_gap}"/>
-<inertia ixx="0.012" ixy="0.0" ixz="0.0" iyy="0.0149" iyz="0.0" izz="0.0235"/>
-</inertial>
-
-<visual>
-<origin xyz="0 0 ${wheel_radius + 2*layer_gap}"/>
-<geometry>
-<box size="0.22 0.18 ${plate_thickness}"/>
-</geometry>
-<material name="wood"/>
-</visual>
-
-<collision>
-<origin xyz="0 0 ${wheel_radius + 2*layer_gap}"/>
-<geometry>
-<box size="0.22 0.18 ${plate_thickness}"/>
-</geometry>
-</collision>
-
-</link>
-
-<joint name="joint_top_layer" type="fixed">
-<parent link="second_layer"/>
-<child link="top_layer"/>
-</joint>
-
-
-
-<!-- RODS -->
-
-<xacro:macro name="rod" params="x y z length name">
-
-<link name="${name}">
-<inertial>
-<mass value="0.1"/>
-<origin xyz="${x} ${y} ${z}"/>
-<inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001"/>
-</inertial>
-<visual>
-<origin xyz="${x} ${y} ${z}"/>
-<geometry>
-<cylinder radius="${rod_radius}" length="${length}"/>
-</geometry>
-<material name="metal"/>
-</visual>
-<collision>
-<origin xyz="${x} ${y} ${z}"/>
-<geometry>
-<cylinder radius="${rod_radius}" length="${length}"/>
-</geometry>
-</collision>
-</link>
-
-<joint name="joint_${name}" type="fixed">
-<parent link="base_link"/>
-<child link="${name}"/>
-</joint>
-
-</xacro:macro>
-
-
-<xacro:rod x="0.12" y="0.09" z="${wheel_radius + layer_gap/2}" length="${layer_gap}" name="rod1"/>
-<xacro:rod x="-0.12" y="0.09" z="${wheel_radius + layer_gap/2}" length="${layer_gap}" name="rod2"/>
-<xacro:rod x="0.12" y="-0.09" z="${wheel_radius + layer_gap/2}" length="${layer_gap}" name="rod3"/>
-<xacro:rod x="-0.12" y="-0.09" z="${wheel_radius + layer_gap/2}" length="${layer_gap}" name="rod4"/>
-
-<xacro:rod x="0.09" y="0.06" z="${wheel_radius + 1.5*layer_gap}" length="${layer_gap}" name="rod5"/>
-<xacro:rod x="-0.09" y="0.06" z="${wheel_radius + 1.5*layer_gap}" length="${layer_gap}" name="rod6"/>
-<xacro:rod x="0.09" y="-0.06" z="${wheel_radius + 1.5*layer_gap}" length="${layer_gap}" name="rod7"/>
-<xacro:rod x="-0.09" y="-0.06" z="${wheel_radius + 1.5*layer_gap}" length="${layer_gap}" name="rod8"/>
-
-
-
-<!-- LEFT WHEEL -->
-
-<link name="left_wheel">
-
-<inertial>
-<mass value="0.3"/>
-<origin rpy="1.5708 0 0"/>
-<inertia ixx="0.00023" ixy="0.0" ixz="0.0" iyy="0.00023" iyz="0.0" izz="0.00038"/>
-</inertial>
-
-<visual>
-<origin rpy="1.5708 0 0"/>
-<geometry>
-<cylinder radius="${wheel_radius}" length="${wheel_width}"/>
-</geometry>
-<material name="blue"/>
-</visual>
-
-<collision>
-<origin rpy="1.5708 0 0"/>
-<geometry>
-<cylinder radius="${wheel_radius}" length="${wheel_width}"/>
-</geometry>
-</collision>
-
-</link>
-
-
-<joint name="joint_left_wheel" type="continuous">
-
-<parent link="base_link"/>
-<child link="left_wheel"/>
-
-<origin xyz="${wheel_x} ${wheel_y} ${wheel_radius}"/>
-
-<axis xyz="0 1 0"/>
-
-</joint>
-
-
-
-<!-- RIGHT WHEEL -->
-
-<link name="right_wheel">
-
-<inertial>
-<mass value="0.3"/>
-<origin rpy="1.5708 0 0"/>
-<inertia ixx="0.00023" ixy="0.0" ixz="0.0" iyy="0.00023" iyz="0.0" izz="0.00038"/>
-</inertial>
-
-<visual>
-<origin rpy="1.5708 0 0"/>
-<geometry>
-<cylinder radius="${wheel_radius}" length="${wheel_width}"/>
-</geometry>
-<material name="blue"/>
-</visual>
-
-<collision>
-<origin rpy="1.5708 0 0"/>
-<geometry>
-<cylinder radius="${wheel_radius}" length="${wheel_width}"/>
-</geometry>
-</collision>
-
-</link>
-
-
-<joint name="joint_right_wheel" type="continuous">
-
-<parent link="base_link"/>
-<child link="right_wheel"/>
-
-<origin xyz="${wheel_x} -${wheel_y} ${wheel_radius}"/>
-
-<axis xyz="0 1 0"/>
-
-</joint>
-
-
-
-<!-- CASTER -->
-
-<link name="caster">
-
-<inertial>
-<mass value="0.1"/>
-<origin xyz="0.13 0 ${wheel_radius/2}"/>
-<inertia ixx="0.000042" ixy="0.0" ixz="0.0" iyy="0.000042" iyz="0.0" izz="0.000042"/>
-</inertial>
-
-<visual>
-<geometry>
-<sphere radius="${wheel_radius/2}"/>
-</geometry>
-<material name="metal"/>
-</visual>
-
-<collision>
-<geometry>
-<sphere radius="${wheel_radius/2}"/>
-</geometry>
-</collision>
-
-</link>
-
-
-<joint name="caster_joint" type="fixed">
-
-<parent link="base_link"/>
-<child link="caster"/>
-
-<origin xyz="0.13 0 ${wheel_radius/2}"/>
-
-</joint>
-
-
-
-<!-- IMU -->
-
-<link name="imu_link">
-
-<inertial>
-<mass value="0.05"/>
-<origin xyz="0 0 ${plate_thickness/2}"/>
-<inertia ixx="0.00002" ixy="0.0" ixz="0.0" iyy="0.00002" iyz="0.0" izz="0.00003"/>
-</inertial>
-
-<visual>
-<origin xyz="0 0 ${plate_thickness/2}"/>
-<geometry>
-<box size="0.04 0.04 0.01"/>
-</geometry>
-<material name="black"/>
-</visual>
-
-<collision>
-<origin xyz="0 0 ${plate_thickness/2}"/>
-<geometry>
-<box size="0.04 0.04 0.01"/>
-</geometry>
-</collision>
-
-</link>
-
-
-<joint name="imu_joint" type="fixed">
-
-<parent link="base_link"/>
-<child link="imu_link"/>
-
-<origin xyz="0 0 ${wheel_radius}"/>
-
-</joint>
-
-
-
-<!-- LIDAR -->
-
-<link name="laser">
-
-<inertial>
-<mass value="0.15"/>
-<origin xyz="0 0 0"/>
-<inertia ixx="0.00005" ixy="0.0" ixz="0.0" iyy="0.00005" iyz="0.0" izz="0.00008"/>
-</inertial>
-
-<visual>
-<geometry>
-<cylinder radius="0.035" length="0.03"/>
-</geometry>
-<material name="black"/>
-</visual>
-
-<collision>
-<geometry>
-<cylinder radius="0.035" length="0.03"/>
-</geometry>
-</collision>
-
-</link>
-
-
-<joint name="laser_joint" type="fixed">
-
-<parent link="top_layer"/>
-<child link="laser"/>
-
-<origin
-  xyz="${laser_x} ${laser_y} ${laser_z}"
-  rpy="${laser_roll} ${laser_pitch} ${laser_yaw}"
-/>
-
-</joint>
-
-
-
-<!-- DIFF DRIVE -->
-
-<gazebo reference="left_wheel">
-<friction>
-<ode>
-<mu1>0.8</mu1>
-<mu2>0.8</mu2>
-</ode>
-</friction>
-</gazebo>
-
-<gazebo reference="right_wheel">
-<friction>
-<ode>
-<mu1>0.8</mu1>
-<mu2>0.8</mu2>
-</ode>
-</friction>
-</gazebo>
-
+  <xacro:property name="layer_gap"       value="0.12"/>
+
+  <xacro:property name="rod_radius"      value="0.005"/>
+
+  <xacro:property name="wheel_radius"    value="0.0335"/>
+  <xacro:property name="wheel_width"     value="0.03"/>
+
+  <!-- wheel joint origin (relative to base_link) -->
+  <xacro:property name="wheel_x"         value="-0.07"/>
+  <xacro:property name="wheel_y"         value="0.155"/>
+
+  <!-- laser joint origin relative to top_layer -->
+  <xacro:property name="laser_x"         value="0.0"/>
+  <xacro:property name="laser_y"         value="0.0"/>
+  <xacro:property name="laser_z"         value="0.025"/>
+  <xacro:property name="laser_roll"      value="0.0"/>
+  <xacro:property name="laser_pitch"     value="0.0"/>
+  <xacro:property name="laser_yaw"       value="0.0"/>
+
+  <!-- Encoder gear DC motor dimensions (JGA25-370 pro-range style) -->
+  <xacro:property name="gearbox_y"       value="0.025"/>  <!-- gearbox depth along Y  -->
+  <xacro:property name="gearbox_sq"      value="0.025"/>  <!-- gearbox W/H (square)   -->
+  <xacro:property name="motor_radius"    value="0.012"/>  <!-- motor can radius        -->
+  <xacro:property name="motor_len"       value="0.042"/>  <!-- motor can length        -->
+  <xacro:property name="encoder_radius"  value="0.010"/>  <!-- encoder drum radius     -->
+  <xacro:property name="encoder_len"     value="0.015"/>  <!-- encoder drum length     -->
+
+  <!-- Motor shaft vertical offset so motors mount under the base plate -->
+  <xacro:property name="motor_z"         value="${-plate_thickness/2 - gearbox_sq/2}"/>
+  <!-- Height of base_link plate centre above base_footprint (ground) -->
+  <xacro:property name="chassis_z"       value="${wheel_radius - motor_z}"/>
+  <!-- Caster ball radius -->
+  <xacro:property name="caster_radius"   value="${wheel_radius / 2.0}"/>
+
+
+  <!-- ================================================================ -->
+  <!-- MATERIALS  (RViz)                                                 -->
+  <!-- ================================================================ -->
+
+  <material name="wood">
+    <color rgba="0.65 0.32 0.12 1"/>
+  </material>
+
+  <material name="metal">
+    <color rgba="0.75 0.75 0.75 1"/>
+  </material>
+
+  <material name="blue">
+    <color rgba="0.05 0.05 0.8 1"/>
+  </material>
+
+  <material name="black">
+    <color rgba="0.1 0.1 0.1 1"/>
+  </material>
+
+  <material name="dark_grey">
+    <color rgba="0.20 0.20 0.20 1"/>
+  </material>
+
+  <material name="yellow">
+    <color rgba="0.90 0.75 0.00 1"/>
+  </material>
+
+  <material name="motor_blue">
+    <color rgba="0.10 0.15 0.55 1"/>
+  </material>
+
+  <material name="pcb_purple">
+    <color rgba="0.28 0.10 0.47 1"/>
+  </material>
+
+  <material name="pcb_green">
+    <color rgba="0.10 0.45 0.10 1"/>
+  </material>
+
+
+  <!-- ================================================================ -->
+  <!-- BASE FOOTPRINT  (REP-120 root link)                              -->
+  <!-- base_link plate centre is at chassis_z height above ground       -->
+  <!-- ================================================================ -->
+
+  <link name="base_footprint"/>
+
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child  link="base_link"/>
+    <origin xyz="0 0 ${chassis_z}" rpy="0 0 0"/>
+  </joint>
+
+
+  <!-- ================================================================ -->
+  <!-- BASE LAYER                                                        -->
+  <!-- ================================================================ -->
+
+  <link name="base_link">
+
+    <inertial>
+      <mass value="2.0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0416" ixy="0.0" ixz="0.0"
+               iyy="0.0505" iyz="0.0"
+               izz="0.0814"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${plate_length} ${plate_width} ${plate_thickness}"/>
+      </geometry>
+      <material name="wood"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${plate_length} ${plate_width} ${plate_thickness}"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <gazebo reference="base_link">
+    <material>Gazebo/Wood</material>
+  </gazebo>
+
+
+  <!-- ================================================================ -->
+  <!-- SECOND LAYER (Middle plate: 0.26 m × 0.20 m)                     -->
+  <!-- Joint origin offsets it layer_gap above base_link                -->
+  <!-- ================================================================ -->
+
+  <link name="second_layer">
+
+    <inertial>
+      <mass value="0.85"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.00285" ixy="0.0" ixz="0.0"
+               iyy="0.00480" iyz="0.0"
+               izz="0.00762"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${second_plate_length} ${second_plate_width} ${plate_thickness}"/>
+      </geometry>
+      <material name="wood"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${second_plate_length} ${second_plate_width} ${plate_thickness}"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <joint name="joint_second_layer" type="fixed">
+    <parent link="base_link"/>
+    <child  link="second_layer"/>
+    <origin xyz="0 0 ${layer_gap}" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="second_layer">
+    <material>Gazebo/Wood</material>
+  </gazebo>
+
+
+  <!-- ================================================================ -->
+  <!-- TOP LAYER                                                         -->
+  <!-- ================================================================ -->
+
+  <link name="top_layer">
+
+    <inertial>
+      <mass value="0.8"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.012"  ixy="0.0" ixz="0.0"
+               iyy="0.0149" iyz="0.0"
+               izz="0.0235"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${top_plate_length} ${top_plate_width} ${plate_thickness}"/>
+      </geometry>
+      <material name="wood"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${top_plate_length} ${top_plate_width} ${plate_thickness}"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <joint name="joint_top_layer" type="fixed">
+    <parent link="second_layer"/>
+    <child  link="top_layer"/>
+    <origin xyz="0 0 ${layer_gap}" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="top_layer">
+    <material>Gazebo/Wood</material>
+  </gazebo>
+
+
+  <!-- ================================================================ -->
+  <!-- RODS                                                              -->
+  <!-- Position is set via the joint origin; link geometry is at origin -->
+  <!-- ================================================================ -->
+
+  <xacro:macro name="rod" params="x y z length name">
+
+    <link name="${name}">
+      <inertial>
+        <mass value="0.1"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.00001" ixy="0.0" ixz="0.0"
+                 iyy="0.00001" iyz="0.0"
+                 izz="0.00001"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${rod_radius}" length="${length}"/>
+        </geometry>
+        <material name="metal"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${rod_radius}" length="${length}"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="joint_${name}" type="fixed">
+      <parent link="base_link"/>
+      <child  link="${name}"/>
+      <origin xyz="${x} ${y} ${z}" rpy="0 0 0"/>
+    </joint>
+
+    <gazebo reference="${name}">
+      <material>Gazebo/Grey</material>
+    </gazebo>
+
+  </xacro:macro>
+
+  <!-- Rods layer 1->2: centre at layer_gap/2 above base_link -->
+  <xacro:rod x=" 0.12" y=" 0.09" z="${layer_gap/2}" length="${layer_gap}" name="rod1"/>
+  <xacro:rod x="-0.12" y=" 0.09" z="${layer_gap/2}" length="${layer_gap}" name="rod2"/>
+  <xacro:rod x=" 0.12" y="-0.09" z="${layer_gap/2}" length="${layer_gap}" name="rod3"/>
+  <xacro:rod x="-0.12" y="-0.09" z="${layer_gap/2}" length="${layer_gap}" name="rod4"/>
+
+  <!-- Rods layer 2->3: centre at layer_gap + layer_gap/2 above base_link -->
+  <xacro:rod x=" 0.09" y=" 0.06" z="${layer_gap + layer_gap/2}" length="${layer_gap}" name="rod5"/>
+  <xacro:rod x="-0.09" y=" 0.06" z="${layer_gap + layer_gap/2}" length="${layer_gap}" name="rod6"/>
+  <xacro:rod x=" 0.09" y="-0.06" z="${layer_gap + layer_gap/2}" length="${layer_gap}" name="rod7"/>
+  <xacro:rod x="-0.09" y="-0.06" z="${layer_gap + layer_gap/2}" length="${layer_gap}" name="rod8"/>
+
+
+  <!-- ================================================================ -->
+  <!-- ENCODER GEAR DC MOTOR  (JGA25-370 style, pro range)              -->
+  <!-- Mounted UNDER the base plate with heavy-duty mounting clamp:      -->
+  <!--   1. Gearbox     — yellow square housing + brass wheel coupler    -->
+  <!--   2. Motor body  — dark-blue cylindrical can                      -->
+  <!--   3. Encoder     — dark-grey drum + green PCB disc at rear        -->
+  <!--   4. Motor clamp — saddle clamp & flange bolted under base plate  -->
+  <!-- side = +1 for left (+Y), -1 for right (-Y)                      -->
+  <!-- ================================================================ -->
+
+  <xacro:macro name="motor_encoder" params="prefix side">
+
+    <!-- ── Gearbox ────────────────────────────────────────────────── -->
+    <link name="${prefix}_gearbox">
+      <inertial>
+        <mass value="0.06"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.000003" ixy="0.0" ixz="0.0"
+                 iyy="0.000003" iyz="0.0"
+                 izz="0.000003"/>
+      </inertial>
+      <!-- Square gearbox body -->
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${gearbox_sq} ${gearbox_y} ${gearbox_sq}"/>
+        </geometry>
+        <material name="yellow"/>
+      </visual>
+      <!-- Brass hex coupler connecting gearbox output shaft to wheel hub -->
+      <visual>
+        <origin xyz="0 ${side * (gearbox_y/2 + 0.005)} 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="0.006" length="0.010"/>
+        </geometry>
+        <material name="yellow"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${gearbox_sq} ${gearbox_y} ${gearbox_sq}"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="${prefix}_gearbox_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="${prefix}_gearbox"/>
+      <origin xyz="${wheel_x} ${side * (wheel_y - gearbox_y/2)} ${motor_z}" rpy="0 0 0"/>
+    </joint>
+
+    <!-- ── Motor body ─────────────────────────────────────────────── -->
+    <link name="${prefix}_motor">
+      <inertial>
+        <mass value="0.10"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.000006" ixy="0.0" ixz="0.0"
+                 iyy="0.000006" iyz="0.0"
+                 izz="0.000004"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${motor_radius}" length="${motor_len}"/>
+        </geometry>
+        <material name="motor_blue"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${motor_radius}" length="${motor_len}"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="${prefix}_motor_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="${prefix}_motor"/>
+      <origin xyz="${wheel_x} ${side * (wheel_y - gearbox_y - motor_len/2)} ${motor_z}" rpy="0 0 0"/>
+    </joint>
+
+    <!-- ── Encoder ────────────────────────────────────────────────── -->
+    <link name="${prefix}_encoder">
+      <inertial>
+        <mass value="0.02"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+                 iyy="0.000001" iyz="0.0"
+                 izz="0.000001"/>
+      </inertial>
+      <!-- Encoder drum -->
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${encoder_radius}" length="${encoder_len}"/>
+        </geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <!-- Encoder PCB disc (green, flush with rear face) -->
+      <visual>
+        <origin xyz="0 ${-side * (encoder_len/2 + 0.001)} 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${encoder_radius + 0.003}" length="0.002"/>
+        </geometry>
+        <material name="pcb_green"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${encoder_radius}" length="${encoder_len}"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="${prefix}_encoder_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="${prefix}_encoder"/>
+      <origin xyz="${wheel_x} ${side * (wheel_y - gearbox_y - motor_len - encoder_len/2)} ${motor_z}" rpy="0 0 0"/>
+    </joint>
+
+    <!-- ── Motor mounting clamp ───────────────────────────────────── -->
+    <link name="${prefix}_motor_clamp">
+      <inertial>
+        <mass value="0.03"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.000003" ixy="0.0" ixz="0.0"
+                 iyy="0.000003" iyz="0.0"
+                 izz="0.000003"/>
+      </inertial>
+      <!-- Upper mounting flange (flush against the underside of the wooden base plate) -->
+      <visual>
+        <origin xyz="0 0 ${gearbox_sq/2 - 0.001}" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.042 0.028 0.002"/>
+        </geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <!-- Front vertical clamp arm -->
+      <visual>
+        <origin xyz="${motor_radius + 0.001} 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.002 0.024 0.023"/>
+        </geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <!-- Rear vertical clamp arm -->
+      <visual>
+        <origin xyz="${-(motor_radius + 0.001)} 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.002 0.024 0.023"/>
+        </geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <!-- Bottom saddle strap wrapping under motor can -->
+      <visual>
+        <origin xyz="0 0 ${-(motor_radius + 0.001)}" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.028 0.024 0.002"/>
+        </geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <!-- Front fixing bolt securing clamp to base plate -->
+      <visual>
+        <origin xyz="0.016 0 ${gearbox_sq/2}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.002" length="0.004"/>
+        </geometry>
+        <material name="metal"/>
+      </visual>
+      <!-- Rear fixing bolt securing clamp to base plate -->
+      <visual>
+        <origin xyz="-0.016 0 ${gearbox_sq/2}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.002" length="0.004"/>
+        </geometry>
+        <material name="metal"/>
+      </visual>
+      <!-- Gearbox face bracket flange -->
+      <visual>
+        <origin xyz="0 ${side * (motor_len/2)} 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.027 0.002 0.027"/>
+        </geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.042 0.028 0.027"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="${prefix}_motor_clamp_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="${prefix}_motor_clamp"/>
+      <origin xyz="${wheel_x} ${side * (wheel_y - gearbox_y - motor_len/2)} ${motor_z}" rpy="0 0 0"/>
+    </joint>
+
+  </xacro:macro>
+
+  <xacro:motor_encoder prefix="left"  side="1"/>
+  <xacro:motor_encoder prefix="right" side="-1"/>
+
+  <gazebo reference="left_motor_clamp">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+  <gazebo reference="right_motor_clamp">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+
+  <!-- ================================================================ -->
+  <!-- LEFT WHEEL                                                        -->
+  <!-- Cylinder axis along Y -> rpy="${pi/2} 0 0"                       -->
+  <!-- ================================================================ -->
+
+  <link name="left_wheel">
+
+    <inertial>
+      <mass value="0.3"/>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      <inertia ixx="0.00023" ixy="0.0" ixz="0.0"
+               iyy="0.00023" iyz="0.0"
+               izz="0.00038"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <joint name="joint_left_wheel" type="continuous">
+    <parent link="base_link"/>
+    <child  link="left_wheel"/>
+    <!-- base_link is at height chassis_z, wheel centre is at motor_z -->
+    <origin xyz="${wheel_x} ${wheel_y} ${motor_z}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <gazebo reference="left_wheel">
+    <material>Gazebo/Blue</material>
+    <mu1>0.8</mu1>
+    <mu2>0.8</mu2>
+    <kp>1e6</kp>
+    <kd>1.0</kd>
+  </gazebo>
+
+
+  <!-- ================================================================ -->
+  <!-- RIGHT WHEEL                                                       -->
+  <!-- ================================================================ -->
+
+  <link name="right_wheel">
+
+    <inertial>
+      <mass value="0.3"/>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      <inertia ixx="0.00023" ixy="0.0" ixz="0.0"
+               iyy="0.00023" iyz="0.0"
+               izz="0.00038"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <joint name="joint_right_wheel" type="continuous">
+    <parent link="base_link"/>
+    <child  link="right_wheel"/>
+    <!-- base_link is at height chassis_z, wheel centre is at motor_z -->
+    <origin xyz="${wheel_x} -${wheel_y} ${motor_z}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <gazebo reference="right_wheel">
+    <material>Gazebo/Blue</material>
+    <mu1>0.8</mu1>
+    <mu2>0.8</mu2>
+    <kp>1e6</kp>
+    <kd>1.0</kd>
+  </gazebo>
+
+
+  <!-- ================================================================ -->
+  <!-- CASTER WHEEL  (ball caster mounted under plate, zero friction)    -->
+  <!-- ================================================================ -->
+
+  <link name="caster">
+
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 ${-chassis_z + caster_radius}" rpy="0 0 0"/>
+      <inertia ixx="0.00002" ixy="0.0" ixz="0.0"
+               iyy="0.00002" iyz="0.0"
+               izz="0.00002"/>
+    </inertial>
+
+    <!-- Top mounting plate bolted under the wooden base plate -->
+    <visual>
+      <origin xyz="0 0 ${-plate_thickness/2 - 0.0015}" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.038 0.034 0.003"/>
+      </geometry>
+      <material name="metal"/>
+    </visual>
+
+    <!-- Caster body / cup housing extending down towards the ball -->
+    <visual>
+      <origin xyz="0 0 ${-0.024}" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.015" length="0.026"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+
+    <!-- Ball caster sphere rolling on the ground -->
+    <visual>
+      <origin xyz="0 0 ${-chassis_z + caster_radius}" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="${caster_radius}"/>
+      </geometry>
+      <material name="metal"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 ${-chassis_z + caster_radius}" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="${caster_radius}"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <joint name="caster_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="caster"/>
+    <!-- Positioned at front of base plate (x = 0.13), joint origin at x=0.13, y=0, z=0 -->
+    <origin xyz="0.13 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="caster">
+    <material>Gazebo/Grey</material>
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+    <kp>1e6</kp>
+    <kd>1.0</kd>
+  </gazebo>
+
+
+  <!-- ================================================================ -->
+  <!-- IMU  (MPU-6050 resting and fixed on top of the base plate)       -->
+  <!-- ================================================================ -->
+
+  <link name="imu_link">
+
+    <inertial>
+      <mass value="0.02"/>
+      <origin xyz="0 0 0.001" rpy="0 0 0"/>
+      <inertia ixx="0.000002" ixy="0.0" ixz="0.0"
+               iyy="0.000002" iyz="0.0"
+               izz="0.000003"/>
+    </inertial>
+
+    <!-- MPU-6050 module: purple PCB ~20 × 16 mm resting flat on plate top -->
+    <visual>
+      <origin xyz="0 0 0.0008" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.020 0.016 0.0016"/>
+      </geometry>
+      <material name="pcb_purple"/>
+    </visual>
+    <!-- MPU-6050 IC chip (QFN package, centred on PCB) -->
+    <visual>
+      <origin xyz="0.001 0 0.0022" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.005 0.005 0.0012"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <!-- Header pin row (one long edge) -->
+    <visual>
+      <origin xyz="-0.008 0 0.0035" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.0025 0.016 0.005"/>
+      </geometry>
+      <material name="metal"/>
+    </visual>
+    <!-- Mounting screw 1 fixing IMU to base plate -->
+    <visual>
+      <origin xyz="0.007 0.0055 0.0018" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.0016" length="0.002"/>
+      </geometry>
+      <material name="metal"/>
+    </visual>
+    <!-- Mounting screw 2 fixing IMU to base plate -->
+    <visual>
+      <origin xyz="0.007 -0.0055 0.0018" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.0016" length="0.002"/>
+      </geometry>
+      <material name="metal"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0.002" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.020 0.016 0.004"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="imu_link"/>
+    <!-- Place IMU on top surface of base_link plate -->
+    <origin xyz="0 0 ${plate_thickness/2}" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="imu_link">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+
+  <!-- ================================================================ -->
+  <!-- LIDAR                                                             -->
+  <!-- ================================================================ -->
+
+  <link name="laser">
+
+    <inertial>
+      <mass value="0.15"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.00005" ixy="0.0" ixz="0.0"
+               iyy="0.00005" iyz="0.0"
+               izz="0.00008"/>
+    </inertial>
+
+    <!-- RPLiDAR A1 — main body (~76 mm dia × 30 mm) -->
+    <visual>
+      <origin xyz="0 0 -0.007" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.038" length="0.030"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <!-- RPLiDAR A1 — rotating scanner head (slightly narrower, dark grey) -->
+    <visual>
+      <origin xyz="0 0 0.014" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.028" length="0.020"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <!-- RPLiDAR A1 — USB/motor connector stub -->
+    <visual>
+      <origin xyz="0.042 0 -0.007" rpy="0 ${pi/2} 0"/>
+      <geometry>
+        <cylinder radius="0.005" length="0.010"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0.004" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.038" length="0.050"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <joint name="laser_joint" type="fixed">
+    <parent link="top_layer"/>
+    <child  link="laser"/>
+    <origin xyz="${laser_x} ${laser_y} ${laser_z}"
+            rpy="${laser_roll} ${laser_pitch} ${laser_yaw}"/>
+  </joint>
+
+  <!-- ================================================================ -->
+  <!-- LIDAR SENSOR — Ignition Gazebo 6 (Fortress) gpu_lidar           -->
+  <!-- Bridged to /scan via ros_gz_bridge in sim.launch.py             -->
+  <!-- ================================================================ -->
+  <gazebo reference="laser">
+    <material>Gazebo/Black</material>
+    <sensor name="lidar" type="gpu_lidar">
+      <pose>0 0 0 0 0 0</pose>
+      <always_on>true</always_on>
+      <visualize>true</visualize>
+      <update_rate>10</update_rate>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.15</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </lidar>
+      <!-- Ignition Fortress: sensor systems loaded via the model-level plugin below -->
+      <!-- Topic is automatically: /world/empty/model/wobble/link/laser/sensor/lidar/scan -->
+      <!-- Bridged to /scan in sim.launch.py -->
+    </sensor>
+  </gazebo>
+
+
+  <!-- ================================================================ -->
+  <!-- IGNITION GAZEBO 6 (FORTRESS) MODEL PLUGINS                       -->
+  <!-- ================================================================ -->
+
+  <gazebo>
+    <!-- Differential Drive (Ignition native — no ROS wrapper needed) -->
+    <!-- ros_gz_bridge in sim.launch.py bridges /cmd_vel and /odom    -->
+    <plugin
+      filename="libignition-gazebo6-diff-drive-system.so"
+      name="ignition::gazebo::systems::DiffDrive">
+      <left_joint>joint_left_wheel</left_joint>
+      <right_joint>joint_right_wheel</right_joint>
+
+      <wheel_separation>0.31</wheel_separation>
+      <wheel_radius>0.0335</wheel_radius>
+
+      <max_linear_acceleration>1.0</max_linear_acceleration>
+      <min_linear_acceleration>-1.0</min_linear_acceleration>
+      <max_angular_acceleration>2.0</max_angular_acceleration>
+      <min_angular_acceleration>-2.0</min_angular_acceleration>
+
+      <!-- Ignition topic names (bridged to ROS2 by ros_gz_bridge) -->
+      <topic>/cmd_vel</topic>
+      <odom_topic>/odom</odom_topic>
+      <tf_topic>/tf</tf_topic>
+
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_footprint</child_frame_id>
+      <odom_publish_frequency>30</odom_publish_frequency>
+    </plugin>
+  </gazebo>
 
 </robot>
