@@ -18,21 +18,15 @@ setup(
         # launch files
         (os.path.join('share', package_name, 'launch'),
          glob('launch/*.py')),
-        # xacro / urdf files
-        (os.path.join('share', package_name, 'urdf'),
-         glob('urdf/*')),
         # SLAM config
         (os.path.join('share', package_name, 'config'),
          glob('config/*')),
-        # worlds
-        (os.path.join('share', package_name, 'worlds'),
-         glob('worlds/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='wobble',
     maintainer_email='wobble@todo.todo',
-    description='Wobble robot simulation',
+    description='Wobble robot SLAM launch and configuration',
     license='TODO: License declaration',
     extras_require={
         'test': [

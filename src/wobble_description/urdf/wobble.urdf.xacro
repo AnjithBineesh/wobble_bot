@@ -41,12 +41,15 @@
   <xacro:property name="laser_yaw"       value="0.0"/>
 
   <!-- Encoder gear DC motor dimensions (JGA25-370 pro-range style) -->
+  <xacro:property name="coupler_len"     value="0.010"/>  <!-- brass shaft coupler     -->
   <xacro:property name="gearbox_y"       value="0.025"/>  <!-- gearbox depth along Y  -->
   <xacro:property name="gearbox_sq"      value="0.025"/>  <!-- gearbox W/H (square)   -->
   <xacro:property name="motor_radius"    value="0.012"/>  <!-- motor can radius        -->
   <xacro:property name="motor_len"       value="0.042"/>  <!-- motor can length        -->
   <xacro:property name="encoder_radius"  value="0.010"/>  <!-- encoder drum radius     -->
   <xacro:property name="encoder_len"     value="0.015"/>  <!-- encoder drum length     -->
+  <!-- Outer face of gearbox stops at wheel inner face minus coupler_len (no overlap) -->
+  <xacro:property name="gearbox_outer_y" value="${wheel_y - wheel_width/2 - coupler_len}"/>
 
   <!-- Motor shaft vertical offset so motors mount under the base plate -->
   <xacro:property name="motor_z"         value="${-plate_thickness/2 - gearbox_sq/2}"/>
@@ -318,9 +321,9 @@
       </visual>
       <!-- Brass hex coupler connecting gearbox output shaft to wheel hub -->
       <visual>
-        <origin xyz="0 ${side * (gearbox_y/2 + 0.005)} 0" rpy="${pi/2} 0 0"/>
+        <origin xyz="0 ${side * (gearbox_y/2 + coupler_len/2)} 0" rpy="${pi/2} 0 0"/>
         <geometry>
-          <cylinder radius="0.006" length="0.010"/>
+          <cylinder radius="0.006" length="${coupler_len}"/>
         </geometry>
         <material name="yellow"/>
       </visual>
@@ -334,7 +337,7 @@
     <joint name="${prefix}_gearbox_joint" type="fixed">
       <parent link="base_link"/>
       <child  link="${prefix}_gearbox"/>
-      <origin xyz="${wheel_x} ${side * (wheel_y - gearbox_y/2)} ${motor_z}" rpy="0 0 0"/>
+      <origin xyz="${wheel_x} ${side * (gearbox_outer_y - gearbox_y/2)} ${motor_z}" rpy="0 0 0"/>
     </joint>
 
     <!-- ── Motor body ─────────────────────────────────────────────── -->
@@ -363,7 +366,7 @@
     <joint name="${prefix}_motor_joint" type="fixed">
       <parent link="base_link"/>
       <child  link="${prefix}_motor"/>
-      <origin xyz="${wheel_x} ${side * (wheel_y - gearbox_y - motor_len/2)} ${motor_z}" rpy="0 0 0"/>
+      <origin xyz="${wheel_x} ${side * (gearbox_outer_y - gearbox_y - motor_len/2)} ${motor_z}" rpy="0 0 0"/>
     </joint>
 
     <!-- ── Encoder ────────────────────────────────────────────────── -->
@@ -401,7 +404,7 @@
     <joint name="${prefix}_encoder_joint" type="fixed">
       <parent link="base_link"/>
       <child  link="${prefix}_encoder"/>
-      <origin xyz="${wheel_x} ${side * (wheel_y - gearbox_y - motor_len - encoder_len/2)} ${motor_z}" rpy="0 0 0"/>
+      <origin xyz="${wheel_x} ${side * (gearbox_outer_y - gearbox_y - motor_len - encoder_len/2)} ${motor_z}" rpy="0 0 0"/>
     </joint>
 
     <!-- ── Motor mounting clamp ───────────────────────────────────── -->
@@ -479,7 +482,7 @@
     <joint name="${prefix}_motor_clamp_joint" type="fixed">
       <parent link="base_link"/>
       <child  link="${prefix}_motor_clamp"/>
-      <origin xyz="${wheel_x} ${side * (wheel_y - gearbox_y - motor_len/2)} ${motor_z}" rpy="0 0 0"/>
+      <origin xyz="${wheel_x} ${side * (gearbox_outer_y - gearbox_y - motor_len/2)} ${motor_z}" rpy="0 0 0"/>
     </joint>
 
   </xacro:macro>
@@ -533,14 +536,15 @@
     <!-- base_link is at height chassis_z, wheel centre is at motor_z -->
     <origin xyz="${wheel_x} ${wheel_y} ${motor_z}" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
+    <dynamics damping="0.05" friction="0.0"/>
   </joint>
 
   <gazebo reference="left_wheel">
     <material>Gazebo/Blue</material>
     <mu1>0.8</mu1>
     <mu2>0.8</mu2>
-    <kp>1e6</kp>
-    <kd>1.0</kd>
+    <kp>1e5</kp>
+    <kd>100.0</kd>
   </gazebo>
 
 
@@ -581,14 +585,15 @@
     <!-- base_link is at height chassis_z, wheel centre is at motor_z -->
     <origin xyz="${wheel_x} -${wheel_y} ${motor_z}" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
+    <dynamics damping="0.05" friction="0.0"/>
   </joint>
 
   <gazebo reference="right_wheel">
     <material>Gazebo/Blue</material>
     <mu1>0.8</mu1>
     <mu2>0.8</mu2>
-    <kp>1e6</kp>
-    <kd>1.0</kd>
+    <kp>1e5</kp>
+    <kd>100.0</kd>
   </gazebo>
 
 
@@ -653,8 +658,8 @@
     <material>Gazebo/Grey</material>
     <mu1>0.0</mu1>
     <mu2>0.0</mu2>
-    <kp>1e6</kp>
-    <kd>1.0</kd>
+    <kp>1e5</kp>
+    <kd>100.0</kd>
   </gazebo>
 
 
@@ -856,6 +861,16 @@
       <frame_id>odom</frame_id>
       <child_frame_id>base_footprint</child_frame_id>
       <odom_publish_frequency>30</odom_publish_frequency>
+    </plugin>
+
+    <!-- Joint State Publisher (Ignition native -> bridged to /joint_states) -->
+    <!-- Required so robot_state_publisher broadcasts continuous wheel TFs     -->
+    <plugin
+      filename="libignition-gazebo6-joint-state-publisher-system.so"
+      name="ignition::gazebo::systems::JointStatePublisher">
+      <topic>/joint_states</topic>
+      <joint_name>joint_left_wheel</joint_name>
+      <joint_name>joint_right_wheel</joint_name>
     </plugin>
   </gazebo>
 

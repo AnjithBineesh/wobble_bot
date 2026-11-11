@@ -10,7 +10,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory('wobble_slam')
+    pkg_share = get_package_share_directory('wobble_description')
     use_jsp_gui = LaunchConfiguration('use_joint_state_publisher_gui')
     use_rviz = LaunchConfiguration('use_rviz')
     rviz_config_file = os.path.join(pkg_share, 'config', 'display.rviz')

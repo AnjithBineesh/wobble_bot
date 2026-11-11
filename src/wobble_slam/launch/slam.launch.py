@@ -9,18 +9,23 @@ from launch.substitutions import Command
 from launch_ros.actions import LifecycleNode, Node
 from launch_ros.event_handlers import OnStateTransition
 from launch_ros.events.lifecycle import ChangeState, matches_node_name
+from launch_ros.parameter_descriptions import ParameterValue
 from lifecycle_msgs.msg import Transition
 
 
 def generate_launch_description():
     pkg_dir = get_package_share_directory('wobble_slam')
+    description_dir = get_package_share_directory('wobble_description')
     ekf_dir = get_package_share_directory('wobble_ekf')
     imu_dir = get_package_share_directory('wobble_imu')
     odom_dir = get_package_share_directory('wobble_odometry')
     sensor_dir = get_package_share_directory('wobble_sensor')
 
-    urdf_xacro = os.path.join(pkg_dir, 'urdf', 'wobble.urdf.xacro')
-    robot_description = Command(['xacro ', urdf_xacro])
+    urdf_xacro = os.path.join(description_dir, 'urdf', 'wobble.urdf.xacro')
+    robot_description = ParameterValue(
+        Command(['xacro ', urdf_xacro]),
+        value_type=str
+    )
     ekf_config = os.path.join(ekf_dir, 'config', 'ekf.yaml')
     imu_config = os.path.join(imu_dir, 'config', 'imu.yaml')
     odom_config = os.path.join(odom_dir, 'config', 'odometry.yaml')

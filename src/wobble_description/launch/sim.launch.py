@@ -11,7 +11,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory('wobble_slam')
+    pkg_share = get_package_share_directory('wobble_description')
     world_file = os.path.join(pkg_share, 'worlds', 'wobble_world.sdf')
     use_rviz = LaunchConfiguration('use_rviz')
     rviz_config_file = os.path.join(pkg_share, 'config', 'display.rviz')
@@ -45,12 +45,13 @@ def generate_launch_description():
         executable='robot_state_publisher',
         parameters=[{
             'robot_description': robot_description,
-            'use_sim_time': True
+            'use_sim_time': True,
+            'publish_frequency': 50.0,
         }],
         output='screen'
     )
 
-    # spawn robot into Ignition Gazebo at (0, 0, 0.05)
+    # spawn robot into Ignition Gazebo just above ground (0, 0, 0.005)
     spawn_robot = Node(
         package='ros_gz_sim',
         executable='create',
@@ -59,22 +60,23 @@ def generate_launch_description():
             '-topic', 'robot_description',
             '-x', '0.0',
             '-y', '0.0',
-            '-z', '0.05'
+            '-z', '0.005'
         ],
         output='screen'
     )
 
-    # bridge Ignition ↔ ROS2 topics
+    # bridge Ignition ↔ ROS2 topics (explicit directions prevent TF/topic echoes)
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
-            '/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist',
-            '/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry',
-            '/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V',
+            '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
+            '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+            '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            '/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model',
             '/world/wobble_world/model/wobble/link/laser/sensor/lidar/scan'
-            '@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan',
+            '@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
         ],
         remappings=[
             (
