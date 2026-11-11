@@ -1,6 +1,6 @@
-# Wobble Bot (`wobble_bot`)
+# Wobble – Autonomous Indoor Guide Robot
 
-A **ROS 2 Humble** workspace for **Wobble**, a differential-drive autonomous mobile robot with 2D LiDAR SLAM, wheel + IMU Extended Kalman Filter (EKF) sensor fusion, custom hardware drivers (GPIO motors/encoders and MPU-6050 IMU), RViz2 visualization, and Ignition Gazebo 6 (Fortress) simulation.
+**Wobble** is a **ROS 2 Humble**-based autonomous indoor guide robot designed to assist people with navigation in indoor environments. Powered by a **Raspberry Pi 5** (alongside an ESP32 motor controller in the broader hardware architecture, with direct `lgpio` motor and encoder drivers implemented in this workspace), it integrates **LiDAR (RPLiDAR A1)**, **IMU (MPU-6050)**, and **wheel encoders** for environment mapping, EKF localization, **SLAM** (`slam_toolbox`), and **Nav2**-ready autonomous navigation through indoor spaces, with full **Ignition Gazebo 6 (Fortress)** simulation and **RViz2** visualization support.
 
 ---
 
