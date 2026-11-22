@@ -6,31 +6,36 @@
   <!-- ================================================================ -->
 
   <!-- Base layer dimensions (bottom plate) -->
-  <xacro:property name="base_plate_length"    value="0.32"/>
-  <xacro:property name="base_plate_width"     value="0.26"/>
+  <xacro:property name="base_plate_length"    value="0.30"/>
+  <xacro:property name="base_plate_width"     value="0.225"/>
 
   <!-- Second layer dimensions (middle plate - stepped between base and top) -->
-  <xacro:property name="second_plate_length"  value="0.26"/>
-  <xacro:property name="second_plate_width"   value="0.20"/>
+  <xacro:property name="second_plate_length"  value="0.25"/>
+  <xacro:property name="second_plate_width"   value="0.165"/>
 
   <!-- Top layer dimensions (third plate) -->
-  <xacro:property name="top_plate_length"     value="0.22"/>
-  <xacro:property name="top_plate_width"      value="0.18"/>
+  <xacro:property name="top_plate_length"     value="0.19"/>
+  <xacro:property name="top_plate_width"      value="0.11"/>
 
   <xacro:property name="plate_length"         value="${base_plate_length}"/>
   <xacro:property name="plate_width"          value="${base_plate_width}"/>
-  <xacro:property name="plate_thickness"      value="0.015"/>
+  <xacro:property name="plate_thickness"      value="0.010"/>
 
   <xacro:property name="layer_gap"       value="0.12"/>
 
   <xacro:property name="rod_radius"      value="0.005"/>
 
-  <xacro:property name="wheel_radius"    value="0.0335"/>
-  <xacro:property name="wheel_width"     value="0.03"/>
+  <xacro:property name="wheel_radius"    value="0.033"/>
+  <xacro:property name="wheel_width"     value="0.022"/>
 
-  <!-- wheel joint origin (relative to base_link) -->
-  <xacro:property name="wheel_x"         value="-0.07"/>
-  <xacro:property name="wheel_y"         value="0.155"/>
+  <!-- Wheel shaft position measured forward from the rear edge -->
+  <xacro:property name="wheel_shaft_from_rear" value="0.040"/>
+  <xacro:property name="wheel_x" value="${wheel_shaft_from_rear - base_plate_length/2}"/>
+  <xacro:property name="caster_wheel_radius" value="0.011"/>
+  <xacro:property name="caster_wheel_width"  value="0.010"/>
+  <xacro:property name="caster_mount_from_front" value="0.043"/>
+  <xacro:property name="caster_x" value="${base_plate_length/2 - caster_mount_from_front}"/>
+  <xacro:property name="caster_trail" value="0.010"/>
 
   <!-- laser joint origin relative to top_layer -->
   <xacro:property name="laser_x"         value="0.0"/>
@@ -39,24 +44,28 @@
   <xacro:property name="laser_roll"      value="0.0"/>
   <xacro:property name="laser_pitch"     value="0.0"/>
   <xacro:property name="laser_yaw"       value="0.0"/>
+  <xacro:property name="imu_x"           value="0.055"/>
+  <xacro:property name="imu_y"           value="0.0"/>
 
   <!-- Encoder gear DC motor dimensions (JGA25-370 pro-range style) -->
   <xacro:property name="coupler_len"     value="0.010"/>  <!-- brass shaft coupler     -->
   <xacro:property name="gearbox_y"       value="0.025"/>  <!-- gearbox depth along Y  -->
   <xacro:property name="gearbox_sq"      value="0.025"/>  <!-- gearbox W/H (square)   -->
   <xacro:property name="motor_radius"    value="0.012"/>  <!-- motor can radius        -->
-  <xacro:property name="motor_len"       value="0.042"/>  <!-- motor can length        -->
   <xacro:property name="encoder_radius"  value="0.010"/>  <!-- encoder drum radius     -->
   <xacro:property name="encoder_len"     value="0.015"/>  <!-- encoder drum length     -->
-  <!-- Outer face of gearbox stops at wheel inner face minus coupler_len (no overlap) -->
-  <xacro:property name="gearbox_outer_y" value="${wheel_y - wheel_width/2 - coupler_len}"/>
+  <xacro:property name="motor_assembly_length" value="0.085"/>
+  <xacro:property name="motor_assembly_gap" value="0.050"/>
+  <xacro:property name="motor_len"       value="${motor_assembly_length - gearbox_y - encoder_len}"/>
+  <xacro:property name="motor_outer_y"   value="${motor_assembly_gap/2 + motor_assembly_length}"/>
+  <xacro:property name="wheel_y"         value="${motor_outer_y + coupler_len + wheel_width/2}"/>
 
   <!-- Motor shaft vertical offset so motors mount under the base plate -->
   <xacro:property name="motor_z"         value="${-plate_thickness/2 - gearbox_sq/2}"/>
   <!-- Height of base_link plate centre above base_footprint (ground) -->
   <xacro:property name="chassis_z"       value="${wheel_radius - motor_z}"/>
-  <!-- Caster ball radius -->
-  <xacro:property name="caster_radius"   value="${wheel_radius / 2.0}"/>
+  <!-- Wheel axle offset from the swivel joint, keeping the caster on the ground -->
+  <xacro:property name="caster_wheel_z" value="${caster_wheel_radius - chassis_z + plate_thickness/2}"/>
 
 
   <!-- ================================================================ -->
@@ -123,9 +132,9 @@
     <inertial>
       <mass value="2.0"/>
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <inertia ixx="0.0416" ixy="0.0" ixz="0.0"
-               iyy="0.0505" iyz="0.0"
-               izz="0.0814"/>
+      <inertia ixx="0.008454" ixy="0.0" ixz="0.0"
+               iyy="0.015017" iyz="0.0"
+               izz="0.023438"/>
     </inertial>
 
     <visual>
@@ -151,7 +160,7 @@
 
 
   <!-- ================================================================ -->
-  <!-- SECOND LAYER (Middle plate: 0.26 m × 0.20 m)                     -->
+  <!-- SECOND LAYER (Middle plate: 0.25 m × 0.165 m)                    -->
   <!-- Joint origin offsets it layer_gap above base_link                -->
   <!-- ================================================================ -->
 
@@ -160,9 +169,9 @@
     <inertial>
       <mass value="0.85"/>
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <inertia ixx="0.00285" ixy="0.0" ixz="0.0"
-               iyy="0.00480" iyz="0.0"
-               izz="0.00762"/>
+      <inertia ixx="0.001935" ixy="0.0" ixz="0.0"
+               iyy="0.004434" iyz="0.0"
+               izz="0.006355"/>
     </inertial>
 
     <visual>
@@ -194,7 +203,7 @@
 
 
   <!-- ================================================================ -->
-  <!-- TOP LAYER                                                         -->
+  <!-- TOP LAYER (0.19 m × 0.11 m)                                      -->
   <!-- ================================================================ -->
 
   <link name="top_layer">
@@ -202,9 +211,9 @@
     <inertial>
       <mass value="0.8"/>
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <inertia ixx="0.012"  ixy="0.0" ixz="0.0"
-               iyy="0.0149" iyz="0.0"
-               izz="0.0235"/>
+      <inertia ixx="0.000813" ixy="0.0" ixz="0.0"
+               iyy="0.002413" iyz="0.0"
+               izz="0.003213"/>
     </inertial>
 
     <visual>
@@ -278,16 +287,16 @@
   </xacro:macro>
 
   <!-- Rods layer 1->2: centre at layer_gap/2 above base_link -->
-  <xacro:rod x=" 0.12" y=" 0.09" z="${layer_gap/2}" length="${layer_gap}" name="rod1"/>
-  <xacro:rod x="-0.12" y=" 0.09" z="${layer_gap/2}" length="${layer_gap}" name="rod2"/>
-  <xacro:rod x=" 0.12" y="-0.09" z="${layer_gap/2}" length="${layer_gap}" name="rod3"/>
-  <xacro:rod x="-0.12" y="-0.09" z="${layer_gap/2}" length="${layer_gap}" name="rod4"/>
+  <xacro:rod x=" 0.115" y=" 0.0725" z="${layer_gap/2}" length="${layer_gap}" name="rod1"/>
+  <xacro:rod x="-0.115" y=" 0.0725" z="${layer_gap/2}" length="${layer_gap}" name="rod2"/>
+  <xacro:rod x=" 0.115" y="-0.0725" z="${layer_gap/2}" length="${layer_gap}" name="rod3"/>
+  <xacro:rod x="-0.115" y="-0.0725" z="${layer_gap/2}" length="${layer_gap}" name="rod4"/>
 
   <!-- Rods layer 2->3: centre at layer_gap + layer_gap/2 above base_link -->
-  <xacro:rod x=" 0.09" y=" 0.06" z="${layer_gap + layer_gap/2}" length="${layer_gap}" name="rod5"/>
-  <xacro:rod x="-0.09" y=" 0.06" z="${layer_gap + layer_gap/2}" length="${layer_gap}" name="rod6"/>
-  <xacro:rod x=" 0.09" y="-0.06" z="${layer_gap + layer_gap/2}" length="${layer_gap}" name="rod7"/>
-  <xacro:rod x="-0.09" y="-0.06" z="${layer_gap + layer_gap/2}" length="${layer_gap}" name="rod8"/>
+  <xacro:rod x=" 0.085" y=" 0.045" z="${layer_gap + layer_gap/2}" length="${layer_gap}" name="rod5"/>
+  <xacro:rod x="-0.085" y=" 0.045" z="${layer_gap + layer_gap/2}" length="${layer_gap}" name="rod6"/>
+  <xacro:rod x=" 0.085" y="-0.045" z="${layer_gap + layer_gap/2}" length="${layer_gap}" name="rod7"/>
+  <xacro:rod x="-0.085" y="-0.045" z="${layer_gap + layer_gap/2}" length="${layer_gap}" name="rod8"/>
 
 
   <!-- ================================================================ -->
@@ -337,7 +346,7 @@
     <joint name="${prefix}_gearbox_joint" type="fixed">
       <parent link="base_link"/>
       <child  link="${prefix}_gearbox"/>
-      <origin xyz="${wheel_x} ${side * (gearbox_outer_y - gearbox_y/2)} ${motor_z}" rpy="0 0 0"/>
+      <origin xyz="${wheel_x} ${side * (motor_outer_y - gearbox_y/2)} ${motor_z}" rpy="0 0 0"/>
     </joint>
 
     <!-- ── Motor body ─────────────────────────────────────────────── -->
@@ -366,7 +375,7 @@
     <joint name="${prefix}_motor_joint" type="fixed">
       <parent link="base_link"/>
       <child  link="${prefix}_motor"/>
-      <origin xyz="${wheel_x} ${side * (gearbox_outer_y - gearbox_y - motor_len/2)} ${motor_z}" rpy="0 0 0"/>
+      <origin xyz="${wheel_x} ${side * (motor_outer_y - gearbox_y - motor_len/2)} ${motor_z}" rpy="0 0 0"/>
     </joint>
 
     <!-- ── Encoder ────────────────────────────────────────────────── -->
@@ -404,7 +413,7 @@
     <joint name="${prefix}_encoder_joint" type="fixed">
       <parent link="base_link"/>
       <child  link="${prefix}_encoder"/>
-      <origin xyz="${wheel_x} ${side * (gearbox_outer_y - gearbox_y - motor_len - encoder_len/2)} ${motor_z}" rpy="0 0 0"/>
+      <origin xyz="${wheel_x} ${side * (motor_outer_y - gearbox_y - motor_len - encoder_len/2)} ${motor_z}" rpy="0 0 0"/>
     </joint>
 
     <!-- ── Motor mounting clamp ───────────────────────────────────── -->
@@ -482,7 +491,7 @@
     <joint name="${prefix}_motor_clamp_joint" type="fixed">
       <parent link="base_link"/>
       <child  link="${prefix}_motor_clamp"/>
-      <origin xyz="${wheel_x} ${side * (gearbox_outer_y - gearbox_y - motor_len/2)} ${motor_z}" rpy="0 0 0"/>
+      <origin xyz="${wheel_x} ${side * (motor_outer_y - gearbox_y - motor_len/2)} ${motor_z}" rpy="0 0 0"/>
     </joint>
 
   </xacro:macro>
@@ -508,9 +517,9 @@
     <inertial>
       <mass value="0.3"/>
       <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
-      <inertia ixx="0.00023" ixy="0.0" ixz="0.0"
-               iyy="0.00023" iyz="0.0"
-               izz="0.00038"/>
+      <inertia ixx="0.0000938" ixy="0.0" ixz="0.0"
+               iyy="0.0000938" iyz="0.0"
+               izz="0.0001634"/>
     </inertial>
 
     <visual>
@@ -557,9 +566,9 @@
     <inertial>
       <mass value="0.3"/>
       <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
-      <inertia ixx="0.00023" ixy="0.0" ixz="0.0"
-               iyy="0.00023" iyz="0.0"
-               izz="0.00038"/>
+      <inertia ixx="0.0000938" ixy="0.0" ixz="0.0"
+               iyy="0.0000938" iyz="0.0"
+               izz="0.0001634"/>
     </inertial>
 
     <visual>
@@ -598,14 +607,14 @@
 
 
   <!-- ================================================================ -->
-  <!-- CASTER WHEEL  (ball caster mounted under plate, zero friction)    -->
+  <!-- SWIVEL CASTER (approximate fork, trail, and 22 x 10 mm wheel)      -->
   <!-- ================================================================ -->
 
   <link name="caster">
 
     <inertial>
-      <mass value="0.1"/>
-      <origin xyz="0 0 ${-chassis_z + caster_radius}" rpy="0 0 0"/>
+      <mass value="0.07"/>
+      <origin xyz="0 0 ${caster_wheel_z/2}" rpy="0 0 0"/>
       <inertia ixx="0.00002" ixy="0.0" ixz="0.0"
                iyy="0.00002" iyz="0.0"
                izz="0.00002"/>
@@ -620,44 +629,76 @@
       <material name="metal"/>
     </visual>
 
-    <!-- Caster body / cup housing extending down towards the ball -->
+    <!-- Swivel stem -->
     <visual>
-      <origin xyz="0 0 ${-0.024}" rpy="0 0 0"/>
+      <origin xyz="0 0 -0.008" rpy="0 0 0"/>
       <geometry>
-        <cylinder radius="0.015" length="0.026"/>
+        <cylinder radius="0.006" length="0.010"/>
       </geometry>
       <material name="dark_grey"/>
     </visual>
 
-    <!-- Ball caster sphere rolling on the ground -->
     <visual>
-      <origin xyz="0 0 ${-chassis_z + caster_radius}" rpy="0 0 0"/>
+      <origin xyz="-${caster_trail} 0.006 ${caster_wheel_z/2}" rpy="0 0 0"/>
       <geometry>
-        <sphere radius="${caster_radius}"/>
+        <box size="0.022 0.002 ${-caster_wheel_z}"/>
       </geometry>
-      <material name="metal"/>
+      <material name="dark_grey"/>
     </visual>
-
-    <collision>
-      <origin xyz="0 0 ${-chassis_z + caster_radius}" rpy="0 0 0"/>
+    <visual>
+      <origin xyz="-${caster_trail} -0.006 ${caster_wheel_z/2}" rpy="0 0 0"/>
       <geometry>
-        <sphere radius="${caster_radius}"/>
+        <box size="0.022 0.002 ${-caster_wheel_z}"/>
       </geometry>
-    </collision>
+      <material name="dark_grey"/>
+    </visual>
 
   </link>
 
-  <joint name="caster_joint" type="fixed">
+  <joint name="caster_joint" type="continuous">
     <parent link="base_link"/>
     <child  link="caster"/>
-    <!-- Positioned at front of base plate (x = 0.13), joint origin at x=0.13, y=0, z=0 -->
-    <origin xyz="0.13 0 0" rpy="0 0 0"/>
+    <origin xyz="${caster_x} 0 ${-plate_thickness/2}" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="caster_wheel">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.03"/>
+      <inertia ixx="0.00000116" ixy="0" ixz="0"
+               iyy="0.00000182" iyz="0"
+               izz="0.00000116"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.57079632679 0 0"/>
+      <geometry>
+        <cylinder radius="${caster_wheel_radius}" length="${caster_wheel_width}"/>
+      </geometry>
+      <material name="metal"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.57079632679 0 0"/>
+      <geometry>
+        <cylinder radius="${caster_wheel_radius}" length="${caster_wheel_width}"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="caster_wheel_joint" type="continuous">
+    <parent link="caster"/>
+    <child link="caster_wheel"/>
+    <origin xyz="-${caster_trail} 0 ${caster_wheel_z}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
   </joint>
 
   <gazebo reference="caster">
     <material>Gazebo/Grey</material>
-    <mu1>0.0</mu1>
-    <mu2>0.0</mu2>
+  </gazebo>
+  <gazebo reference="caster_wheel">
+    <material>Gazebo/Grey</material>
+    <mu1>0.4</mu1>
+    <mu2>0.4</mu2>
     <kp>1e5</kp>
     <kd>100.0</kd>
   </gazebo>
@@ -728,10 +769,10 @@
   </link>
 
   <joint name="imu_joint" type="fixed">
-    <parent link="base_link"/>
+    <parent link="second_layer"/>
     <child  link="imu_link"/>
-    <!-- Place IMU on top surface of base_link plate -->
-    <origin xyz="0 0 ${plate_thickness/2}" rpy="0 0 0"/>
+    <!-- Approximate measured mount: centered laterally, 5.5 cm forward on second_layer. -->
+    <origin xyz="${imu_x} ${imu_y} ${plate_thickness/2}" rpy="0 0 0"/>
   </joint>
 
   <gazebo reference="imu_link">
@@ -805,6 +846,8 @@
       <always_on>true</always_on>
       <visualize>true</visualize>
       <update_rate>10</update_rate>
+      <topic>/scan</topic>
+      <ignition_frame_id>laser</ignition_frame_id>
       <lidar>
         <scan>
           <horizontal>
@@ -825,9 +868,7 @@
           <stddev>0.01</stddev>
         </noise>
       </lidar>
-      <!-- Ignition Fortress: sensor systems loaded via the model-level plugin below -->
-      <!-- Topic is automatically: /world/empty/model/wobble/link/laser/sensor/lidar/scan -->
-      <!-- Bridged to /scan in sim.launch.py -->
+      <!-- Keep the bridge topic independent of Gazebo's generated link path. -->
     </sensor>
   </gazebo>
 
@@ -845,8 +886,9 @@
       <left_joint>joint_left_wheel</left_joint>
       <right_joint>joint_right_wheel</right_joint>
 
-      <wheel_separation>0.31</wheel_separation>
-      <wheel_radius>0.0335</wheel_radius>
+      <!-- Keep plugin values synchronized with wheel_y and wheel_radius above. -->
+      <wheel_separation>0.262</wheel_separation>
+      <wheel_radius>0.033</wheel_radius>
 
       <max_linear_acceleration>1.0</max_linear_acceleration>
       <min_linear_acceleration>-1.0</min_linear_acceleration>
@@ -864,13 +906,15 @@
     </plugin>
 
     <!-- Joint State Publisher (Ignition native -> bridged to /joint_states) -->
-    <!-- Required so robot_state_publisher broadcasts continuous wheel TFs     -->
+    <!-- Required so robot_state_publisher broadcasts movable-link TFs         -->
     <plugin
       filename="libignition-gazebo6-joint-state-publisher-system.so"
       name="ignition::gazebo::systems::JointStatePublisher">
       <topic>/joint_states</topic>
       <joint_name>joint_left_wheel</joint_name>
       <joint_name>joint_right_wheel</joint_name>
+      <joint_name>caster_joint</joint_name>
+      <joint_name>caster_wheel_joint</joint_name>
     </plugin>
   </gazebo>
 

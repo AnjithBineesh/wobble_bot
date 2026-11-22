@@ -4,7 +4,39 @@
 
 ---
 
-## ⚡ Quick Start: Manual SLAM Mapping
+## 🧪 Test SLAM in Gazebo First
+
+The checked-in Gazebo plugins target Fortress and were validated with ROS 2 Humble. The hardware instructions below target Jazzy; running this model with Jazzy/Harmonic requires a Gazebo plugin migration.
+
+Build and source the workspace, then launch Gazebo, the robot, and SLAM together:
+```bash
+cd ~/wobble_bot
+source /opt/ros/humble/setup.bash && source install/setup.bash
+ros2 launch wobble_slam slam_sim.launch.py
+```
+
+In another terminal, drive the simulated robot with keyboard teleoperation:
+```bash
+source /opt/ros/humble/setup.bash && source ~/wobble_bot/install/setup.bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
+The simulation publishes `/scan`, `/odom`, and `/tf`; RViz starts by default. Use this to verify mapping and loop closure before bringing up the hardware.
+
+## 🧭 Nav2 Navigation in Gazebo
+
+Stop any SLAM launch first. This launch starts Gazebo without SLAM, loads the saved map, starts Nav2 and RViz, and initializes AMCL at Gazebo's spawn pose `(0, 0, 0)`. Run it in one terminal:
+
+```bash
+cd ~/wobble_bot
+source /opt/ros/humble/setup.bash && source install/setup.bash
+ros2 launch wobble_slam nav2_gazebo.launch.py
+```
+
+The initial pose defaults match the simulation spawn. Override them with `initial_pose_x`, `initial_pose_y`, and `initial_pose_yaw` if the robot or saved map starts elsewhere. RViz uses [nav2.rviz](./src/wobble_slam/config/nav2.rviz) to show the saved map, global and local costmaps, laser scan, robot model, and TF. Use its Nav2 Goal tool to select a destination.
+
+Nav2 generates the costmaps live from the saved map and `/scan`; they are not separate files to save. The global costmap combines the static map, lidar obstacles, and inflation. The local costmap is a rolling 3 × 3 m lidar costmap. At the default spawn, the closest lidar return was about 1.97 m away, outside the local costmap's 1.5 m half-width, so an initially clear local costmap is expected. Both costmaps are displayed in RViz from `/global_costmap/costmap` and `/local_costmap/costmap`.
+
+## ⚡ Quick Start: Manual SLAM Mapping on Hardware
 
 To map an indoor room, open three terminal windows:
 

@@ -9,9 +9,15 @@
 
   <depend>launch</depend>
   <depend>launch_ros</depend>
+  <exec_depend>ament_index_python</exec_depend>
   <depend>xacro</depend>
   <depend>robot_state_publisher</depend>
   <depend>slam_toolbox</depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>nav2_amcl</exec_depend>
+  <exec_depend>nav2_map_server</exec_depend>
+  <exec_depend>nav2_lifecycle_manager</exec_depend>
+  <exec_depend>nav2_rviz_plugins</exec_depend>
   <depend>rplidar_ros</depend>
   <depend>rviz2</depend>
   <depend>wobble_description</depend>

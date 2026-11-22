@@ -4,10 +4,10 @@ odom_node:
     wheel_radius: 0.030
     left_wheel_radius: 0.030
     right_wheel_radius: 0.030
-    # Physical track width = 0.140 m, Calibrated effective wheel base = 0.285 m
-    # (compensates for tire scrubbing and wheel slip during in-place turns)
-    wheel_base: 0.140
-    wheel_base_scale: 2.035714
+    # Estimated physical track from the measured motor and wheel layout.
+    # Preserve the calibrated effective base (0.285 m) for tire scrub.
+    wheel_base: 0.262
+    wheel_base_scale: 1.08778626
     # Measured encoder resolution: 330 pulses/rev x 4 quadrature = 1320 ticks/rev
     ticks_per_rev: 1320
     left_ticks_per_rev: 1320.0

@@ -8,10 +8,11 @@ This document records the exact physical, kinematic, sensor, and algorithmic cal
 
 | Parameter | Calibrated Value | Notes / Purpose | Config File |
 | :--- | :--- | :--- | :--- |
-| **Wheel Radius** | `0.030 m` ($30\text{ mm}$) | Standard nominal wheel radius | `wobble_odometry/config/odometry.yaml` |
-| **Track Width (Wheel Base)** | `0.140 m` ($140\text{ mm}$) | Measured center-to-center wheel distance | `wobble_odometry/config/odometry.yaml` |
+| **Odometry Wheel Radius** | `0.030 m` ($30\text{ mm}$) | Existing calibrated value retained for hardware odometry | `wobble_odometry/config/odometry.yaml` |
+| **Physical Wheel Diameter** | `0.066 m` ($66\text{ mm}$) | Measured; Gazebo geometry uses a `0.033 m` radius | `wobble_description/urdf/wobble.urdf.xacro` |
+| **Physical Track Width** | `0.262 m` ($262\text{ mm}$) | Estimated center-to-center distance from motor/wheel dimensions; verify with calipers | `wobble_odometry/config/odometry.yaml` |
 | **Effective Wheel Base** | `0.285 m` | Compensates for tire scrub / friction during in-place turns | `wobble_odometry/config/odometry.yaml` |
-| **Wheel Base Scale** | `2.035714` | $0.285 / 0.140$ effective ratio | `wobble_odometry/config/odometry.yaml` |
+| **Wheel Base Scale** | `1.087786` | $0.285 / 0.262$ effective ratio | `wobble_odometry/config/odometry.yaml` |
 | **Encoder Resolution** | `1320 ticks/rev` | Full 4-state quadrature ($330\text{ pulses} \times 4$) | `wobble_odometry/config/odometry.yaml` |
 | **Left / Right Distance Scale**| `1.0 / 1.0` | Direct linear scaling | `wobble_odometry/config/odometry.yaml` |
 | **Min Motor PWM** | `14%` | Overcomes gearbox static friction gently | `wobble_control/config/motor.yaml` |
@@ -23,6 +24,27 @@ This document records the exact physical, kinematic, sensor, and algorithmic cal
 | **Gyro Startup Deadband** | `0.5 deg/s` | Eliminates stationary odometry creep | `wobble_imu/config/imu.yaml` |
 | **SLAM Map Resolution** | `0.05 m` ($5\text{ cm/cell}$) | Standard 2D occupancy grid | `wobble_slam/config/mapper_params_online_async.yaml` |
 | **SLAM Travel Thresholds** | `0.05 m / 0.05 rad` | Update triggers for slow indoor crawl | `wobble_slam/config/mapper_params_online_async.yaml` |
+
+### Simulation Geometry and Calibration Scope
+
+The chassis plates are `0.300 × 0.225 m`, `0.250 × 0.165 m`, and `0.190 × 0.110 m`; each is `0.010 m` thick. The drive wheels are `0.066 m` in diameter and `0.022 m` thick. From the `0.085 m` motor length, `0.050 m` encoder gap, `0.010 m` shaft, and wheel thickness, the physical wheel-center spacing is estimated at `0.262 m`; measure it directly before final hardware calibration. Gazebo uses the physical `0.033 m` wheel radius and this estimated track. Hardware odometry retains its calibrated `0.030 m` wheel radius and `0.285 m` effective turn base; updating the physical track and scale preserves that effective value. The swivel caster mount is `0.043 m` behind the front edge of the base (`x = +0.107 m`), with a `0.022 m` diameter and `0.010 m` wide wheel. The URDF gives it an estimated `0.010 m` trailing offset behind the swivel axis based on the photos; its fork and `0.4` contact friction are simulation approximations until measured/tuned. Support-rod positions were moved to fit inside the revised plate footprints, but their exact mounting-hole coordinates remain to be confirmed.
+
+The motor can diameter is `0.024 m`. The geared encoder motor assembly is modeled as `0.085 m` long excluding the `0.010 m` shaft. The wheel shafts are `0.040 m` forward of the base's rear edge (`x = -0.110 m` from the chassis center), with motor assemblies aligned to that axle position and their encoder ends facing inward across a `0.050 m` gap. Their gearbox/can/encoder component split retains the prior model's `0.025 m` gearbox and `0.015 m` encoder assumptions.
+
+The simulation uses Gazebo differential-drive odometry and synthetic LiDAR. It verifies SLAM, scan transforms, and mapping, but does not exercise the hardware encoder, IMU, or EKF calibration path.
+
+### Nav2 Simulation Costmaps
+
+The `wobble_slam nav2_gazebo.launch.py` launch uses the installed ROS 2 Humble Nav2 defaults in `nav2_bringup/params/nav2_params.yaml`. Nav2 builds live `nav_msgs/OccupancyGrid` costmaps from the saved map and `/scan`; they are published for RViz and are not separate map files.
+
+| Costmap | Frame | Size / Resolution | Update / Publish | Sources and processing |
+| :--- | :--- | :--- | :--- | :--- |
+| **Global** | `map` | Saved map / `0.05 m` | `1 Hz / 1 Hz` | Static map + `/scan` obstacle marking and clearing (2.5 m obstacle range, 3.0 m raytrace range), then inflation |
+| **Local** | `odom` | Rolling `3 × 3 m` / `0.05 m` | `5 Hz / 2 Hz` | `/scan` voxel obstacle marking and clearing, then inflation |
+
+Both use `base_link` and the Nav2 default `robot_radius: 0.22 m`, `inflation_radius: 0.55 m`, and `cost_scaling_factor: 3.0`. These are simulation/navigation defaults, not measured hardware footprint or clearance calibration; validate them against the final robot footprint before real-robot navigation. The RViz configuration displays `/global_costmap/costmap` and `/local_costmap/costmap` over the saved map.
+
+In the tested Gazebo spawn, the nearest lidar return was about `1.97 m` away while the local costmap extends `1.5 m` from the robot center. Therefore the local costmap starts free and receives obstacle cells as the robot approaches them; this is expected rather than a failure to generate the costmap.
 
 ---
 
@@ -67,6 +89,7 @@ $$\Delta \omega = K_p \cdot (\theta_{\text{target}} - \theta_{\text{actual}}) - 
 
 ### MPU-6050 Calibration Parameters (`~/.ros2/imu_calibration.json`)
 The MPU-6050 is connected via I2C at address `0x68`:
+- **Mount Position**: On `second_layer`, approximately `0.055 m` forward (+X) from its center, centered laterally. This is the midpoint of the reported 5–6 cm estimate and should be measured more precisely when convenient.
 - **Gyroscope Bias**:
   - `gx_offset`: `-3.715 deg/s`
   - `gy_offset`: `+0.385 deg/s`

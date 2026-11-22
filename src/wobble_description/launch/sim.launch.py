@@ -16,16 +16,11 @@ def generate_launch_description():
     use_rviz = LaunchConfiguration('use_rviz')
     rviz_config_file = os.path.join(pkg_share, 'config', 'display.rviz')
 
-    urdf_file = os.path.join(pkg_share, 'urdf', 'wobble.urdf')
     urdf_xacro = os.path.join(pkg_share, 'urdf', 'wobble.urdf.xacro')
-    if os.path.exists(urdf_file):
-        with open(urdf_file, 'r', encoding='utf-8') as f:
-            robot_description = ParameterValue(f.read(), value_type=str)
-    else:
-        robot_description = ParameterValue(
-            Command(['xacro ', urdf_xacro]),
-            value_type=str
-        )
+    robot_description = ParameterValue(
+        Command(['xacro ', urdf_xacro]),
+        value_type=str
+    )
 
     # start Ignition Gazebo (Fortress) with the custom world
     gazebo = IncludeLaunchDescription(
@@ -77,14 +72,7 @@ def generate_launch_description():
             '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model',
-            '/world/wobble_world/model/wobble/link/laser/sensor/lidar/scan'
-            '@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-        ],
-        remappings=[
-            (
-                '/world/wobble_world/model/wobble/link/laser/sensor/lidar/scan',
-                '/scan'
-            ),
+            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
         ],
         output='screen'
     )

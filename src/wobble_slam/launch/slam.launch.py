@@ -35,16 +35,11 @@ def generate_launch_description():
     serial_baudrate = LaunchConfiguration('serial_baudrate')
     auto_standby = LaunchConfiguration('auto_standby')
 
-    urdf_file = os.path.join(description_dir, 'urdf', 'wobble.urdf')
     urdf_xacro = os.path.join(description_dir, 'urdf', 'wobble.urdf.xacro')
-    if os.path.exists(urdf_file):
-        with open(urdf_file, 'r', encoding='utf-8') as f:
-            robot_description = ParameterValue(f.read(), value_type=str)
-    else:
-        robot_description = ParameterValue(
-            Command(['xacro ', urdf_xacro]),
-            value_type=str
-        )
+    robot_description = ParameterValue(
+        Command(['xacro ', urdf_xacro]),
+        value_type=str
+    )
     motor_config = os.path.join(control_dir, 'config', 'motor.yaml')
     ekf_config = os.path.join(ekf_dir, 'config', 'ekf.yaml')
     imu_config = os.path.join(imu_dir, 'config', 'imu.yaml')
@@ -229,9 +224,9 @@ def generate_launch_description():
         rplidar_node,
 
         # SLAM
-        slam_node,
         slam_startup_handler,
         slam_activate_handler,
+        slam_node,
 
         # Visualization
         rviz_node,
