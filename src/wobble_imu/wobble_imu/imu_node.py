@@ -18,8 +18,8 @@ class IMUNode(Node):
         super().__init__('imu_node')
 
         self.publisher_ = self.create_publisher(Imu, '/imu/data', 10)
-        self.declare_parameter('publish_rate_hz', 50.0)
-        self.declare_parameter('log_rate_hz', 1.0)
+        self.declare_parameter('publish_rate_hz', 100.0)
+        self.declare_parameter('log_rate_hz', 0.5)
         self.declare_parameter('frame_id', 'imu_link')
         self.declare_parameter('calibration_file', '~/.ros2/imu_calibration.json')
         self.declare_parameter('zero_reference_on_startup', True)

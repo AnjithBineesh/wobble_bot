@@ -10,7 +10,8 @@ This document records the exact physical, kinematic, sensor, and algorithmic cal
 | :--- | :--- | :--- | :--- |
 | **Odometry Wheel Radius** | `0.030 m` ($30\text{ mm}$) | Existing calibrated value retained for hardware odometry | `wobble_odometry/config/odometry.yaml` |
 | **Physical Wheel Diameter** | `0.066 m` ($66\text{ mm}$) | Measured; Gazebo geometry uses a `0.033 m` radius | `wobble_description/urdf/wobble.urdf.xacro` |
-| **Physical Track Width** | `0.262 m` ($262\text{ mm}$) | Estimated center-to-center distance from motor/wheel dimensions; verify with calipers | `wobble_odometry/config/odometry.yaml` |
+| **Physical Track Width** | `0.262 m` ($262\text{ mm}$) | Estimated wheel-center spacing; used for motor kinematics and as the odometry scale baseline; verify with calipers | `wobble_control/config/motor.yaml`, `wobble_odometry/config/odometry.yaml` |
+| **Motor Kinematic Wheel Base** | `0.262 m` | Estimated physical spacing used to convert angular commands to left/right wheel speeds | `wobble_control/config/motor.yaml` |
 | **Effective Wheel Base** | `0.285 m` | Compensates for tire scrub / friction during in-place turns | `wobble_odometry/config/odometry.yaml` |
 | **Wheel Base Scale** | `1.087786` | $0.285 / 0.262$ effective ratio | `wobble_odometry/config/odometry.yaml` |
 | **Encoder Resolution** | `1320 ticks/rev` | Full 4-state quadrature ($330\text{ pulses} \times 4$) | `wobble_odometry/config/odometry.yaml` |
@@ -27,11 +28,22 @@ This document records the exact physical, kinematic, sensor, and algorithmic cal
 
 ### Simulation Geometry and Calibration Scope
 
-The chassis plates are `0.300 × 0.225 m`, `0.250 × 0.165 m`, and `0.190 × 0.110 m`; each is `0.010 m` thick. The drive wheels are `0.066 m` in diameter and `0.022 m` thick. From the `0.085 m` motor length, `0.050 m` encoder gap, `0.010 m` shaft, and wheel thickness, the physical wheel-center spacing is estimated at `0.262 m`; measure it directly before final hardware calibration. Gazebo uses the physical `0.033 m` wheel radius and this estimated track. Hardware odometry retains its calibrated `0.030 m` wheel radius and `0.285 m` effective turn base; updating the physical track and scale preserves that effective value. The swivel caster mount is `0.043 m` behind the front edge of the base (`x = +0.107 m`), with a `0.022 m` diameter and `0.010 m` wide wheel. The URDF gives it an estimated `0.010 m` trailing offset behind the swivel axis based on the photos; its fork and `0.4` contact friction are simulation approximations until measured/tuned. Support-rod positions were moved to fit inside the revised plate footprints, but their exact mounting-hole coordinates remain to be confirmed.
+The chassis plates are `0.300 × 0.225 m`, `0.250 × 0.165 m`, and `0.190 × 0.110 m`; each is `0.010 m` thick. The drive wheels are `0.066 m` in diameter and `0.022 m` thick. From the `0.085 m` motor length, `0.050 m` encoder gap, `0.010 m` shaft, and wheel thickness, the physical wheel-center spacing is estimated at `0.262 m`; measure it directly before final hardware calibration. Gazebo uses the physical `0.033 m` wheel radius and this estimated track. The real motor controller uses the estimated `0.262 m` physical track for differential-drive command conversion. Hardware odometry retains its existing calibrated `0.030 m` effective wheel radius and `0.285 m` effective turn base; `wheel_base_scale: 1.08778626` preserves that effective base while recording the `0.262 m` physical baseline. Do not replace the effective radius or turn base with the geometric simulation values without real straight-line and turn tests. The swivel caster mount is `0.043 m` behind the front edge of the base (`x = +0.107 m`), with a `0.022 m` diameter and `0.010 m` wide wheel. The URDF gives it an estimated `0.010 m` trailing offset behind the swivel axis based on the photos; its fork and `0.4` contact friction are simulation approximations until measured/tuned. Support-rod positions were moved to fit inside the revised plate footprints, but their exact mounting-hole coordinates remain to be confirmed.
 
 The motor can diameter is `0.024 m`. The geared encoder motor assembly is modeled as `0.085 m` long excluding the `0.010 m` shaft. The wheel shafts are `0.040 m` forward of the base's rear edge (`x = -0.110 m` from the chassis center), with motor assemblies aligned to that axle position and their encoder ends facing inward across a `0.050 m` gap. Their gearbox/can/encoder component split retains the prior model's `0.025 m` gearbox and `0.015 m` encoder assumptions.
 
 The simulation uses Gazebo differential-drive odometry and synthetic LiDAR. It verifies SLAM, scan transforms, and mapping, but does not exercise the hardware encoder, IMU, or EKF calibration path.
+
+### Real-Robot SLAM Data Path
+
+The hardware launch is `wobble_slam slam.launch.py sim:=false`. It runs the encoder and IMU drivers, wheel odometry, EKF, RPLiDAR A1 driver, robot-state publisher, and SLAM Toolbox without Gazebo or Nav2/AMCL:
+
+1. `/left_encoder` and `/right_encoder` feed wheel odometry on `/wheel/odom`.
+2. The EKF fuses wheel linear velocity with `/imu/data`, publishes `/odom`, and owns `odom -> base_footprint`.
+3. Robot State Publisher publishes the fixed URDF transforms, including `base_footprint -> base_link -> laser` and `imu_link`.
+4. The RPLiDAR publishes `/scan` in frame `laser`; SLAM Toolbox consumes `/scan` and odometry, publishes the map, and owns `map -> odom`.
+
+The MPU-6050 is modeled `0.055 m` forward on `second_layer`; this position is based on the supplied measurement, but its axis orientation still needs a hardware check. Keep Wobble motionless through IMU startup zeroing, verify the scan frame and TF chain on the real device, and confirm the estimated track before relying on odometry. Simulation success does not replace hardware calibration.
 
 ### Nav2 Simulation Costmaps
 

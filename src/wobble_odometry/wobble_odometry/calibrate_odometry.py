@@ -14,9 +14,24 @@ def parse_args():
         )
     )
     parser.add_argument('--ticks-per-rev', type=int, required=True)
-    parser.add_argument('--left-wheel-radius', type=float, default=0.0335)
-    parser.add_argument('--right-wheel-radius', type=float, default=0.0335)
-    parser.add_argument('--wheel-base', type=float, default=0.31)
+    parser.add_argument(
+        '--left-wheel-radius',
+        type=float,
+        default=0.030,
+        help='Current calibrated effective wheel radius in meters.',
+    )
+    parser.add_argument(
+        '--right-wheel-radius',
+        type=float,
+        default=0.030,
+        help='Current calibrated effective wheel radius in meters.',
+    )
+    parser.add_argument(
+        '--wheel-base',
+        type=float,
+        default=0.262,
+        help='Estimated physical wheel-center spacing used as the scale baseline.',
+    )
     parser.add_argument(
         '--straight-distance',
         type=float,

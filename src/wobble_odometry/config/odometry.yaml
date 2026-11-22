@@ -1,6 +1,6 @@
 odom_node:
   ros__parameters:
-    # Calibrated geometry from Squirtle Bot
+    # Existing calibrated Wobble effective rolling radii.
     wheel_radius: 0.030
     left_wheel_radius: 0.030
     right_wheel_radius: 0.030

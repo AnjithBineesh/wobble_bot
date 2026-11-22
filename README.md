@@ -36,20 +36,23 @@ The initial pose defaults match the simulation spawn. Override them with `initia
 
 Nav2 generates the costmaps live from the saved map and `/scan`; they are not separate files to save. The global costmap combines the static map, lidar obstacles, and inflation. The local costmap is a rolling 3 × 3 m lidar costmap. At the default spawn, the closest lidar return was about 1.97 m away, outside the local costmap's 1.5 m half-width, so an initially clear local costmap is expected. Both costmaps are displayed in RViz from `/global_costmap/costmap` and `/local_costmap/costmap`.
 
-## ⚡ Quick Start: Manual SLAM Mapping on Hardware
+The simulation Nav2 launch aligns DWB acceleration limits with Gazebo's diff-drive model and relaxes the progress checker slightly to reduce unnecessary recoveries during slow obstacle maneuvers.
 
-To map an indoor room, open three terminal windows:
+## ⚡ Quick Start: Real-Robot SLAM Mapping
+
+Run this hardware workflow on the Wobble Raspberry Pi with ROS 2 Jazzy. Keep the robot stationary while the IMU performs startup calibration. Do not run Gazebo or Nav2/AMCL during mapping; SLAM Toolbox must be the sole publisher of `map -> odom`.
 
 ### 1️⃣ Terminal 1: Robot Hardware Bringup
-Starts the motor controller, encoders, wheel odometry, IMU, EKF fusion, RPLiDAR, and SLAM Toolbox:
+Starts the motor controller, encoders, wheel odometry, IMU, EKF, RPLiDAR, and SLAM Toolbox. The launch uses hardware mode explicitly and leaves RViz for a separate computer:
 ```bash
 cd ~/wobble_bot
 source /opt/ros/jazzy/setup.bash && source install/setup.bash
-ros2 launch wobble_slam slam.launch.py use_rviz:=false
+ros2 launch wobble_slam slam.launch.py sim:=false use_rviz:=false
 ```
+The defaults use `/dev/ttyUSB0` at `115200` baud for the RPLiDAR A1. Override them if the device enumerates differently, for example `serial_port:=/dev/ttyUSB1`. Before driving, confirm the laser scan and TF frames are present and verify motor direction at the configured crawl speed in a clear area.
 
 ### 2️⃣ Terminal 2: RViz Visualization
-Launch RViz on your PC or laptop connected to the same Wi-Fi network (or via SSH with GUI forwarding):
+On a PC or laptop on the same ROS 2 network and `ROS_DOMAIN_ID`, launch RViz:
 ```bash
 source /opt/ros/jazzy/setup.bash && source ~/wobble_bot/install/setup.bash
 ros2 run rviz2 rviz2 -d ~/wobble_bot/src/wobble_slam/config/slam.rviz
@@ -65,6 +68,8 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 - **`,`**: Drive backward
 - **`j` / `l`**: Turn left / right in place
 - **`k`**: Stop
+
+The normal `motor_node` teleop path is configured for at most `20%` PWM with a `0.5 s` command watchdog. Before floor operation, verify wheel direction with the drive wheels raised. The separate `wobble_control/test_motors.py` diagnostic bypasses this limit and applies `60%` PWM directly; do not run it with the robot on the floor. The estimated `0.262 m` wheel-center spacing is used for motor kinematics; measure it on the physical robot. Hardware odometry retains its existing `0.030 m` effective wheel radius and `0.285 m` effective turn base until real straight-line and turn tests justify recalibration.
 
 ### 💾 4️⃣ Save Your Finished Map
 When you are done exploring the space and have closed all loops:

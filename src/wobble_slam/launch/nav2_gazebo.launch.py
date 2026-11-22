@@ -8,6 +8,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
+from nav2_common.launch import RewrittenYaml
 
 
 def generate_launch_description():
@@ -22,6 +23,18 @@ def generate_launch_description():
     initial_pose_yaw = LaunchConfiguration('initial_pose_yaw')
 
     nav2_params = os.path.join(nav2_dir, 'params', 'nav2_params.yaml')
+    nav2_navigation_params = RewrittenYaml(
+        source_file=nav2_params,
+        param_rewrites={
+            'controller_server.ros__parameters.progress_checker.required_movement_radius': '0.25',
+            'controller_server.ros__parameters.progress_checker.movement_time_allowance': '15.0',
+            'controller_server.ros__parameters.FollowPath.acc_lim_x': '1.0',
+            'controller_server.ros__parameters.FollowPath.decel_lim_x': '-1.0',
+            'controller_server.ros__parameters.FollowPath.acc_lim_theta': '2.0',
+            'controller_server.ros__parameters.FollowPath.decel_lim_theta': '-2.0',
+        },
+        convert_types=True,
+    )
     sim_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(description_dir, 'launch', 'sim.launch.py')
@@ -34,7 +47,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             'use_sim_time': 'true',
-            'params_file': nav2_params,
+            'params_file': nav2_navigation_params,
             'autostart': 'true',
             'use_composition': 'False',
         }.items()
