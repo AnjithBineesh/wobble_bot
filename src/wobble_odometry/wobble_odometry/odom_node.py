@@ -22,6 +22,8 @@ class OdomNode(Node):
         self.declare_parameter('wheel_base', 0.31)
         self.declare_parameter('wheel_base_scale', 1.0)
         self.declare_parameter('ticks_per_rev', 1320)
+        self.declare_parameter('left_ticks_per_rev', 0.0)
+        self.declare_parameter('right_ticks_per_rev', 0.0)
         self.declare_parameter('left_distance_scale', 1.0)
         self.declare_parameter('right_distance_scale', 1.0)
         self.declare_parameter('left_speed_scale', 1.0)
@@ -75,11 +77,16 @@ class OdomNode(Node):
             self.right_wheel_radius *= self.right_distance_scale * legacy_right_scale
 
         self.effective_wheel_base = self.wheel_base * self.wheel_base_scale
+        left_tpr = float(self.get_parameter('left_ticks_per_rev').value)
+        right_tpr = float(self.get_parameter('right_ticks_per_rev').value)
+        self.left_ticks_per_rev = left_tpr if left_tpr > 0.0 else float(self.ticks_per_rev)
+        self.right_ticks_per_rev = right_tpr if right_tpr > 0.0 else float(self.ticks_per_rev)
+
         self.left_meters_per_tick = (
-            2.0 * math.pi * self.left_wheel_radius / self.ticks_per_rev
+            2.0 * math.pi * self.left_wheel_radius / self.left_ticks_per_rev
         )
         self.right_meters_per_tick = (
-            2.0 * math.pi * self.right_wheel_radius / self.ticks_per_rev
+            2.0 * math.pi * self.right_wheel_radius / self.right_ticks_per_rev
         )
 
         self.x = 0.0

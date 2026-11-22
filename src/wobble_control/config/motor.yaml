@@ -1,0 +1,28 @@
+motor_node:
+  ros__parameters:
+    gpio_chip: 4
+    in1_pin: 17
+    in2_pin: 18
+    in3_pin: 27
+    in4_pin: 22
+    ena_pin: 12
+    enb_pin: 13
+    wheel_base: 0.140
+    linear_scale: 0.12    # Ultra-slow crawl: 12% scale (~1.5-2.5 cm/s)
+    angular_scale: 0.12   # Ultra-slow turn: 12% scale (~3-5 deg/s)
+    max_linear_speed: 0.15
+    min_pwm: 14           # Minimum duty cycle to smoothly turn gearbox without jerk
+    max_pwm: 20           # Absolute ceiling capped at 20% PWM - guaranteed safe crawl
+    pwm_frequency: 100
+    left_speed_trim: 1.02 # Left motor friction offset
+    right_speed_trim: 1.00
+    left_invert: false
+    right_invert: false
+    cmd_timeout_sec: 0.5  # Auto-stop after 0.5s if teleop key is released
+    cmd_vel_topic: /cmd_vel
+    # Active IMU Heading Lock: keeps forward drive perfectly straight against caster wheel drag
+    enable_imu_heading_lock: true
+    imu_topic: /imu/data
+    heading_kp: 1.2
+    heading_kd: 0.08
+    max_heading_correction: 0.35

@@ -4,15 +4,29 @@ ekf_filter_node:
     wheel_odom_topic: /wheel/odom
     imu_topic: /imu/data
     output_topic: /odom
-    base_frame: base_link
+    base_frame: base_footprint
     odom_frame: odom
     publish_tf: true
-    process_noise_xy: 0.002
-    process_noise_yaw: 0.01
-    process_noise_velocity: 0.05
-    process_noise_yaw_rate: 0.08
+
+    # Enable IMU orientation so wheel slip or wheels turning in the air cannot rotate heading
+    imu_enabled: true
+    use_imu_heading: true
+
+    # Threshold below which the robot is considered stationary
+    stationary_threshold: 0.01
+
+    # Process noise
+    process_noise_xy: 0.001
+    process_noise_yaw: 0.001
+    process_noise_velocity: 0.02
+    process_noise_yaw_rate: 0.02
+
+    # Measurement noise
     wheel_position_noise: 0.02
+    wheel_linear_velocity_noise: 0.05
     wheel_yaw_noise: 0.20
-    wheel_linear_velocity_noise: 0.08
-    wheel_yaw_rate_noise: 0.15
-    imu_yaw_rate_noise: 0.02
+    wheel_yaw_rate_noise: 0.20
+
+    # IMU measurement noise (high trust in IMU orientation and gyro)
+    imu_yaw_noise: 0.02
+    imu_yaw_rate_noise: 0.04

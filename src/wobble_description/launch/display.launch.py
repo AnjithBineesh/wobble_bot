@@ -15,14 +15,16 @@ def generate_launch_description():
     use_rviz = LaunchConfiguration('use_rviz')
     rviz_config_file = os.path.join(pkg_share, 'config', 'display.rviz')
 
-    # ParameterValue wrapper required in ROS 2 Humble
-    robot_description = ParameterValue(
-        Command([
-            'xacro ',
-            os.path.join(pkg_share, 'urdf', 'wobble.urdf.xacro')
-        ]),
-        value_type=str
-    )
+    urdf_file = os.path.join(pkg_share, 'urdf', 'wobble.urdf')
+    urdf_xacro = os.path.join(pkg_share, 'urdf', 'wobble.urdf.xacro')
+    if os.path.exists(urdf_file):
+        with open(urdf_file, 'r', encoding='utf-8') as f:
+            robot_description = ParameterValue(f.read(), value_type=str)
+    else:
+        robot_description = ParameterValue(
+            Command(['xacro ', urdf_xacro]),
+            value_type=str
+        )
 
     return LaunchDescription([
         DeclareLaunchArgument(

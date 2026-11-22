@@ -13,6 +13,7 @@
   <depend>robot_state_publisher</depend>
   <depend>slam_toolbox</depend>
   <depend>rplidar_ros</depend>
+  <depend>rviz2</depend>
   <depend>wobble_description</depend>
   <depend>wobble_control</depend>
   <depend>wobble_sensor</depend>

@@ -5,6 +5,10 @@ imu_node:
     frame_id: imu_link
     calibration_file: ~/.ros2/imu_calibration.json
     zero_reference_on_startup: true
+    calibrate_gyro_on_startup: true
+    gyro_samples_on_startup: 150
+    gyro_deadband_deg: 0.5
+    invert_z_gyro: false  # Standard ROS REP-103: CCW turn is positive +Z (matches MPU-6050 physical axis)
     accel_alpha: 0.2
     gyro_alpha: 0.35
     complementary_gain: 0.02

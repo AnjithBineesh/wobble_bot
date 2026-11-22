@@ -23,6 +23,10 @@ class IMUNode(Node):
         self.declare_parameter('frame_id', 'imu_link')
         self.declare_parameter('calibration_file', '~/.ros2/imu_calibration.json')
         self.declare_parameter('zero_reference_on_startup', True)
+        self.declare_parameter('calibrate_gyro_on_startup', True)
+        self.declare_parameter('gyro_samples_on_startup', 150)
+        self.declare_parameter('gyro_deadband_deg', 0.5)
+        self.declare_parameter('invert_z_gyro', False)
         self.declare_parameter('accel_alpha', 0.2)
         self.declare_parameter('gyro_alpha', 0.35)
         self.declare_parameter('complementary_gain', 0.02)
@@ -34,6 +38,18 @@ class IMUNode(Node):
         self.frame_id = str(self.get_parameter('frame_id').value)
         self.zero_reference_on_startup = bool(
             self.get_parameter('zero_reference_on_startup').value
+        )
+        self.calibrate_gyro_on_startup = bool(
+            self.get_parameter('calibrate_gyro_on_startup').value
+        )
+        self.gyro_samples_on_startup = int(
+            self.get_parameter('gyro_samples_on_startup').value
+        )
+        self.gyro_deadband_deg = float(
+            self.get_parameter('gyro_deadband_deg').value
+        )
+        self.invert_z_gyro = bool(
+            self.get_parameter('invert_z_gyro').value
         )
         self.accel_alpha = float(self.get_parameter('accel_alpha').value)
         self.gyro_alpha = float(self.get_parameter('gyro_alpha').value)
@@ -70,6 +86,10 @@ class IMUNode(Node):
             self._calibrate_accel()
             self._save_calibration(calibration_file)
 
+        # Quick dynamic gyro recalibration on startup to remove thermal/residual offset
+        if self.calibrate_gyro_on_startup:
+            self._quick_calibrate_gyro(self.gyro_samples_on_startup)
+
         self.filtered_accel = None
         self.filtered_gyro = None
         self.roll = 0.0
@@ -82,6 +102,17 @@ class IMUNode(Node):
         self.log_period = 1.0 / max(float(self.get_parameter('log_rate_hz').value), 1e-6)
         self.last_log_time = self.get_clock().now()
         self.timer = self.create_timer(1.0 / publish_rate_hz, self.publish_imu)
+
+    def _quick_calibrate_gyro(self, samples=150):
+        self.get_logger().info(f'Zeroing gyro over {samples} samples on startup (keep robot still)...')
+        gyro_samples = []
+        for _ in range(samples):
+            gyro_samples.append(self._raw_gyro_vector())
+            time.sleep(0.005)
+        self.gyro_offset = np.mean(gyro_samples, axis=0)
+        self.get_logger().info(
+            f'Gyro zeroed: offset=[gx={self.gyro_offset[0]:.3f}, gy={self.gyro_offset[1]:.3f}, gz={self.gyro_offset[2]:.3f}] deg/s'
+        )
 
     def _calibrate_gyro(self):
         samples = 600
@@ -149,7 +180,13 @@ class IMUNode(Node):
             return
 
         accel = self.mount_rotation @ (self._raw_accel_vector() - self.accel_offset)
-        gyro = self.mount_rotation @ np.radians(self._raw_gyro_vector() - self.gyro_offset)
+        raw_gyro = self._raw_gyro_vector() - self.gyro_offset
+        if self.invert_z_gyro:
+            raw_gyro[2] = -raw_gyro[2]
+        # Apply deadband on gz to eliminate drift when robot is stationary
+        if abs(raw_gyro[2]) < self.gyro_deadband_deg:
+            raw_gyro[2] = 0.0
+        gyro = self.mount_rotation @ np.radians(raw_gyro)
 
         if self.filtered_accel is None:
             self.filtered_accel = accel
@@ -200,7 +237,7 @@ class IMUNode(Node):
         msg.orientation_covariance = [
             0.03, 0.0, 0.0,
             0.0, 0.03, 0.0,
-            0.0, 0.0, 999.0,
+            0.0, 0.0, 0.01,
         ]
         msg.angular_velocity.x = float(gx)
         msg.angular_velocity.y = float(gy)

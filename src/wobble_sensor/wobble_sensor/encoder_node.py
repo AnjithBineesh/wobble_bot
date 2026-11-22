@@ -246,21 +246,6 @@ class EncoderNode(Node):
         delta = self.transition_delta.get((previous_state, current_state))
         if delta is None:
             return None
-
-        last_transition_ns = (
-            self.last_left_transition_ns if is_left else self.last_right_transition_ns
-        )
-        if now_ns - last_transition_ns < self.min_transition_interval_ns:
-            if is_left:
-                self.rejected_left_bounce += 1
-            else:
-                self.rejected_right_bounce += 1
-            return 0
-
-        if is_left:
-            self.last_left_transition_ns = now_ns
-        else:
-            self.last_right_transition_ns = now_ns
         return delta
 
     def _filtered_state(self, raw_state, is_left):
@@ -336,7 +321,7 @@ class EncoderNode(Node):
             f'R:{rejected_right_bounce})'
         )
 
-        if left_is_still_noisy or right_is_still_noisy:
+        if self.max_still_ticks_per_sec > 0 and (left_is_still_noisy or right_is_still_noisy):
             self.get_logger().warning(
                 'Encoder drift detected while the robot should be still '
                 f'(left_delta={left_delta}, right_delta={right_delta}).'
