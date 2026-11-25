@@ -79,6 +79,42 @@ source /opt/ros/jazzy/setup.bash
 ros2 run nav2_map_server map_saver_cli -f ~/wobble_bot/maps/my_room_map
 ```
 
+## 🧭 Real-Robot Navigation with Nav2
+
+Install the Jazzy Nav2 runtime components on the Raspberry Pi (the map server is also needed to save maps):
+```bash
+sudo apt install ros-jazzy-nav2-map-server ros-jazzy-nav2-amcl \
+  ros-jazzy-nav2-controller ros-jazzy-nav2-planner ros-jazzy-nav2-behaviors \
+  ros-jazzy-nav2-bt-navigator ros-jazzy-nav2-lifecycle-manager \
+  ros-jazzy-nav2-costmap-2d ros-jazzy-nav2-navfn-planner \
+  ros-jazzy-nav2-dwb-controller ros-jazzy-nav2-smoother \
+  ros-jazzy-nav2-velocity-smoother ros-jazzy-nav2-waypoint-follower \
+  ros-jazzy-nav2-collision-monitor ros-jazzy-nav2-rviz-plugins
+```
+
+Stop both SLAM and teleoperation before starting navigation. Nav2 AMCL replaces SLAM Toolbox as the publisher of `map -> odom`; do not run both at once. From the robot workspace:
+```bash
+cd ~/wobble_bot
+source /opt/ros/jazzy/setup.bash
+colcon build --symlink-install
+source install/setup.bash
+ros2 launch wobble_slam nav2_real.launch.py use_rviz:=false \
+  initial_pose_x:=0.0 initial_pose_y:=0.0 initial_pose_yaw:=0.0
+```
+
+The initial-pose defaults assume the robot is at the map origin, facing +X. Override all three values if its starting pose differs. The launch starts map localization first, then waits 8 seconds before starting navigation so AMCL has time to publish the initial `map -> odom` transform.
+
+On the ROS-connected laptop, with the same `ROS_DOMAIN_ID`, start RViz:
+```bash
+source /opt/ros/jazzy/setup.bash
+export ROS_DOMAIN_ID=0
+rviz2 -d ~/wobble_bot/src/wobble_slam/config/nav2.rviz
+```
+
+In RViz, confirm the robot and scan align with the map. Use **Nav2 Goal** to select a nearby destination in mapped free space. Start with short goals in a clear area and supervise the robot with access to the physical stop. The collision monitor is an additional software stop, not a safety-rated substitute for supervision.
+
+The RViz config also displays AMCL's particle cloud. The particles should cluster around the robot pose after localization converges; a spread-out cloud indicates uncertain localization and should be corrected with **2D Pose Estimate** before navigating.
+
 ---
 
 ## 🛡️ Key Features & Safety Mechanisms
